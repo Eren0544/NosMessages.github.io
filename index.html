@@ -463,36 +463,45 @@ async function saveUserProfile(user, name, avatar) {
   await set(ref(db,`emailIndex/${emailKey}`), user.uid);
 }
 
-/* Auth state */
+/* Auth state — runs once on login/logout */
+let appInitialized = false;
+let contactsUnsub  = null;
+
 onAuthStateChanged(auth, async user => {
   if(user) {
-    const snap = await get(ref(db,`users/${user.uid}`));
-    if(snap.exists()) {
-      me = snap.val();
-    } else {
-      await saveUserProfile(user, user.displayName||"Utilisateur","🌸");
-      const snap2 = await get(ref(db,`users/${user.uid}`));
-      me = snap2.val();
+    // Fetch or create profile
+    let snap = await get(ref(db,`users/${user.uid}`));
+    if(!snap.exists()) {
+      await saveUserProfile(user, user.displayName||"Utilisateur", "🌸");
+      snap = await get(ref(db,`users/${user.uid}`));
     }
-    enterApp();
+    if(!snap.exists()) { toast("Erreur profil 😕"); return; }
+    me = snap.val();
+
+    if(!appInitialized) {
+      appInitialized = true;
+      enterApp();
+    }
   } else {
     me = null;
-    showScreen("loginScreen");
+    appInitialized = false;
+    // Unsub contacts listener
+    if(contactsUnsub) { contactsUnsub(); contactsUnsub = null; }
     document.getElementById("contactsScreen").classList.remove("on");
     document.getElementById("chatScreen").classList.remove("on");
+    showScreen("loginScreen");
   }
 });
 
 function enterApp() {
-  showScreen(""); // hide all auth screens
+  // Hide all auth screens
   document.querySelectorAll(".screen").forEach(s=>s.classList.add("hidden"));
-  loadContacts();
-  setPresence();
-  buildEmojiBar();
+
+  // Show contacts
   document.getElementById("contactsScreen").classList.add("on");
   document.getElementById("chatScreen").classList.remove("on");
 
-  // My avatar
+  // My avatar in header
   const myAvEl = document.getElementById("myAv");
   if(me.photoURL) {
     myAvEl.innerHTML=`<img src="${me.photoURL}" alt="">`;
@@ -500,10 +509,19 @@ function enterApp() {
     myAvEl.textContent = me.avatar || "🌸";
   }
   document.getElementById("myName").textContent = `${me.name} 💕`;
+
+  setPresence();
+  buildEmojiBar();
+  loadContacts();
 }
 
 /* Logout */
 document.getElementById("logoutBtn").addEventListener("click", async () => {
+  appInitialized = false;
+  if(contactsUnsub) { contactsUnsub(); contactsUnsub = null; }
+  chatUnsubs.forEach(u=>u()); chatUnsubs=[];
+  currentChat = null;
+  contactsData = {};
   await signOut(auth);
   toast("À bientôt ! 👋");
 });
@@ -517,15 +535,19 @@ function setPresence() {
 
 /* ══════════════ CONTACTS ══════════════ */
 function loadContacts() {
-  onValue(ref(db,`contacts/${me.uid}`), async snap => {
+  // Unsub previous listener if any
+  if(contactsUnsub) { contactsUnsub(); contactsUnsub = null; }
+
+  contactsUnsub = onValue(ref(db,`contacts/${me.uid}`), async snap => {
     contactsData = {};
     if(!snap.exists()) { renderContacts(); return; }
     const entries = Object.entries(snap.val());
-    for(const [uid] of entries) {
-      const uSnap = await get(ref(db,`users/${uid}`));
-      if(uSnap.exists()) contactsData[uid] = uSnap.val();
-    }
-    // Load last messages & presence for each
+    const fetches = entries.map(([uid]) =>
+      get(ref(db,`users/${uid}`)).then(uSnap => {
+        if(uSnap.exists()) contactsData[uid] = uSnap.val();
+      })
+    );
+    await Promise.all(fetches);
     renderContacts();
   });
 }
