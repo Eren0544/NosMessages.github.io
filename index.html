@@ -382,7 +382,8 @@ body{height:100vh;overflow:hidden;color:var(--text);background:var(--cream);-web
     </div>
     <div class="ssec">
       <h3>Zone dangereuse</h3>
-      <button class="btn-danger" id="logoutBtnS">🚪 Se déconnecter</button>
+      <button class="btn-danger" id="logoutBtnS" style="margin-bottom:10px">🚪 Se déconnecter</button>
+      <button class="btn-danger" id="deleteAccountBtn" style="border-color:#c0392b;color:#c0392b">🗑️ Supprimer mon compte</button>
     </div>
   </div>
 </div>
@@ -420,6 +421,32 @@ body{height:100vh;overflow:hidden;color:var(--text);background:var(--cream);-web
   </div>
 </div>
 
+<!-- DELETE ACCOUNT MODAL -->
+<div class="overlay off" id="deleteModal">
+  <div class="modal" style="text-align:center">
+    <div style="font-size:2.5rem;margin-bottom:10px">⚠️</div>
+    <h3 style="color:#c0392b">Supprimer le compte</h3>
+    <p class="modal-sub" style="margin-top:8px">Cette action est <strong>irréversible</strong>.<br>Tous tes messages, contacts et données seront supprimés définitivement.</p>
+    <!-- Email section -->
+    <div id="deletePwdSection">
+      <p class="modal-sub" style="margin-top:4px">Entre ton mot de passe pour confirmer :</p>
+      <input id="deletePwd" class="inp" type="password" placeholder="Mot de passe" autocomplete="current-password"/>
+    </div>
+    <!-- Google section -->
+    <div id="deleteGoogleSection" style="display:none">
+      <p class="modal-sub" style="margin-top:4px">Connecte-toi avec Google pour confirmer la suppression :</p>
+      <button class="btn-google" id="deleteGoogleReauthBtn" style="margin-bottom:10px">
+        <svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+        Confirmer avec Google
+      </button>
+    </div>
+    <div class="err" id="deleteErr"></div>
+    <div class="modal-row">
+      <button class="btn-cancel" id="deleteCancelBtn">Annuler</button>
+      <button class="btn-add" id="deleteConfirmBtn" style="background:linear-gradient(135deg,#e05070,#c0392b)">🗑️ Supprimer</button>
+    </div>
+  </div>
+</div>
 <div id="lightbox"><img id="lightboxImg" src="" alt=""/></div>
 <div id="rpop"></div>
 <button id="scrollBtn">↓</button>
@@ -428,7 +455,8 @@ body{height:100vh;overflow:hidden;color:var(--text);background:var(--cream);-web
 <script type="module">
 import { initializeApp }    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword,
-         signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut, updateProfile }
+         signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut, updateProfile,
+         deleteUser, reauthenticateWithCredential, EmailAuthProvider }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getDatabase, ref, push, set, get, remove, onValue, onChildAdded,
          onDisconnect, serverTimestamp, query, orderByChild, limitToLast, update }
@@ -662,6 +690,98 @@ $("logoutBtnS").onclick=async()=>{
   chatUnsubs.forEach(u=>u()); chatUnsubs=[];
   if(contactsUnsub){contactsUnsub();contactsUnsub=null;}
   await signOut(auth); showToast("À bientôt ! 👋");
+};
+
+/* ── Delete account ── */
+function isGoogleUser() {
+  const fbUser=auth.currentUser;
+  return fbUser?.providerData?.some(p=>p.providerId==="google.com");
+}
+
+$("deleteAccountBtn").onclick=()=>{
+  $("deletePwd").value=""; $("deleteErr").textContent="";
+  // Show correct section based on provider
+  const google=isGoogleUser();
+  $("deletePwdSection").style.display   = google?"none":"block";
+  $("deleteGoogleSection").style.display= google?"block":"none";
+  $("deleteConfirmBtn").style.display   = google?"none":"flex";
+  $("deleteModal").classList.remove("off");
+  if(!google) setTimeout(()=>$("deletePwd").focus(),100);
+};
+$("deleteCancelBtn").onclick=()=>$("deleteModal").classList.add("off");
+$("deleteModal").onclick=e=>{ if(e.target===$("deleteModal")) $("deleteModal").classList.add("off"); };
+
+async function doDeleteAccount(fbUser) {
+  const uid=me.uid;
+  const ek=me.emailKey||(me.email||"").replace(/\./g,"_").replace(/@/g,"__");
+  const tag=me.tag||"";
+  const deletes=[];
+  deletes.push(remove(ref(db,`users/${uid}`)));
+  deletes.push(remove(ref(db,`presence/${uid}`)));
+  deletes.push(remove(ref(db,`contacts/${uid}`)));
+  deletes.push(remove(ref(db,`prefs/${uid}`)));
+  if(ek) deletes.push(remove(ref(db,`emailIndex/${ek}`)));
+  if(tag) deletes.push(remove(ref(db,`tagIndex/${tag}`)));
+  const contactsSnap=await get(ref(db,`contacts/${uid}`));
+  if(contactsSnap.exists()){
+    Object.keys(contactsSnap.val()).forEach(cid=>{
+      deletes.push(remove(ref(db,`contacts/${cid}/${uid}`)));
+    });
+  }
+  await Promise.all(deletes);
+  await deleteUser(fbUser);
+  $("deleteModal").classList.add("off");
+  showToast("Compte supprimé. À bientôt 🌸");
+}
+
+// Email/password confirm
+$("deleteConfirmBtn").onclick=async()=>{
+  const pwd=$("deletePwd").value;
+  if(!pwd){ $("deleteErr").textContent="Entre ton mot de passe"; return; }
+  $("deleteConfirmBtn").disabled=true; $("deleteConfirmBtn").textContent="⏳ Suppression…";
+  $("deleteErr").textContent="";
+  try {
+    const fbUser=auth.currentUser;
+    const cred=EmailAuthProvider.credential(fbUser.email,pwd);
+    await reauthenticateWithCredential(fbUser,cred);
+    await doDeleteAccount(fbUser);
+  } catch(e){
+    $("deleteConfirmBtn").disabled=false; $("deleteConfirmBtn").textContent="🗑️ Supprimer";
+    if(e.code==="auth/wrong-password"||e.code==="auth/invalid-credential"){
+      $("deleteErr").textContent="Mot de passe incorrect";
+    } else if(e.code==="auth/requires-recent-login"){
+      $("deleteErr").textContent="Session expirée — reconnecte-toi d'abord";
+    } else {
+      $("deleteErr").textContent="Erreur : "+e.code;
+    }
+  }
+};
+
+// Google confirm — use reauthenticateWithPopup (correct Firebase API)
+const GOOGLE_SVG = '<svg viewBox="0 0 48 48" style="width:18px;height:18px;flex-shrink:0"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg> Confirmer avec Google';
+
+$("deleteGoogleReauthBtn").onclick=async()=>{
+  const btn=$("deleteGoogleReauthBtn");
+  btn.disabled=true; btn.textContent="⏳ Confirmation…";
+  $("deleteErr").textContent="";
+  try {
+    const fbUser=auth.currentUser;
+    // reauthenticateWithPopup is the correct way for Google
+    const {reauthenticateWithPopup}=await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js");
+    const gprovider=new GoogleAuthProvider();
+    gprovider.setCustomParameters({login_hint:fbUser.email});
+    await reauthenticateWithPopup(fbUser, gprovider);
+    await doDeleteAccount(fbUser);
+  } catch(e){
+    btn.disabled=false; btn.innerHTML=GOOGLE_SVG;
+    const msgs={
+      "auth/popup-closed-by-user":"Popup fermée — réessaie",
+      "auth/cancelled-popup-request":"Popup annulée — réessaie",
+      "auth/requires-recent-login":"Session expirée — reconnecte-toi d'abord",
+      "auth/user-mismatch":"Mauvais compte Google utilisé",
+    };
+    $("deleteErr").textContent=msgs[e.code]||("Erreur : "+e.code);
+  }
 };
 $("darkToggle").onclick=()=>{
   applyDark(!darkMode);
