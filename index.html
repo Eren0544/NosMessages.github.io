@@ -410,14 +410,27 @@ document.getElementById("regBtn").addEventListener("click", async () => {
   const name  = document.getElementById("regName").value.trim();
   const email = document.getElementById("regEmail").value.trim();
   const pwd   = document.getElementById("regPwd").value;
+  const errEl = document.getElementById("regErr");
   if(!name||!email||!pwd){setErr("regErr","Remplis tous les champs");return;}
-  if(pwd.length<6){setErr("regErr","Mot de passe trop court");return;}
+  if(pwd.length<6){setErr("regErr","Mot de passe trop court (6 min)");return;}
+  const btn = document.getElementById("regBtn");
+  btn.disabled=true; btn.innerHTML="<span class=spinner></span> Création…";
   try {
     const cred = await createUserWithEmailAndPassword(auth, email, pwd);
     await updateProfile(cred.user, {displayName: name});
     await saveUserProfile(cred.user, name, selectedAvatar);
   } catch(e) {
-    setErr("regErr", fmtAuthErr(e.code));
+    btn.disabled=false; btn.textContent="Créer mon compte ✨";
+    if(e.code === "auth/email-already-in-use") {
+      errEl.innerHTML = "Email déjà utilisé. <a href='#' id='goLoginLink' style='color:var(--rose-deep);font-weight:600'>Se connecter ?</a>";
+      document.getElementById("goLoginLink")?.addEventListener("click", ev => {
+        ev.preventDefault();
+        document.getElementById("loginEmail").value = email;
+        showScreen("loginScreen");
+      });
+    } else {
+      setErr("regErr", fmtAuthErr(e.code));
+    }
   }
 });
 
@@ -834,8 +847,18 @@ function setLoading(btnId,txtId,loading){
   btn.disabled=loading; txt.textContent=loading?"⏳ Connexion…":"Se connecter";
 }
 function fmtAuthErr(code){
-  const map={"auth/user-not-found":"Email introuvable","auth/wrong-password":"Mot de passe incorrect","auth/email-already-in-use":"Email déjà utilisé","auth/invalid-email":"Email invalide","auth/weak-password":"Mot de passe trop court","auth/too-many-requests":"Trop d'essais, réessaie plus tard","auth/invalid-credential":"Email ou mot de passe incorrect"};
-  return map[code]||"Erreur de connexion";
+  const map={
+    "auth/user-not-found":"Aucun compte avec cet email",
+    "auth/wrong-password":"Mot de passe incorrect",
+    "auth/email-already-in-use":"Email déjà utilisé — connecte-toi",
+    "auth/invalid-email":"Email invalide",
+    "auth/weak-password":"Mot de passe trop court (6 min)",
+    "auth/too-many-requests":"Trop de tentatives, réessaie dans quelques minutes",
+    "auth/invalid-credential":"Email ou mot de passe incorrect",
+    "auth/network-request-failed":"Problème réseau, vérifie ta connexion",
+    "auth/operation-not-allowed":"Méthode de connexion non activée sur Firebase",
+  };
+  return map[code]||("Erreur: "+code);
 }
 function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\n/g,"<br>");}
 </script>
