@@ -203,6 +203,46 @@ body{height:100vh;overflow:hidden;color:var(--text);background:var(--cream);-web
 #toast.on{opacity:1;}
 @media(max-width:600px){.card{border-radius:22px;padding:28px 16px 24px;}.brow{max-width:92%;}#rpop{left:50%!important;transform:translateX(-50%)!important;top:auto!important;bottom:130px!important;}#chatScreen,#contactsScreen,#settingsPanel{max-width:100%;}}
 @media(min-width:900px){#chatScreen,#contactsScreen,#settingsPanel{border-left:1px solid var(--border);border-right:1px solid var(--border);box-shadow:0 0 80px var(--shadow);}}
+
+/* ── VOICE MESSAGE ── */
+.voice-btn{background:none;border:none;font-size:1.15rem;cursor:pointer;opacity:.55;transition:all .2s;flex-shrink:0;padding:2px;position:relative;}
+.voice-btn:hover{opacity:1;}
+.voice-btn.recording{opacity:1;animation:pulse 0.8s ease infinite;}
+.voice-btn.recording::after{content:'';position:absolute;inset:-4px;border-radius:50%;border:2px solid var(--rose-deep);animation:pulse 0.8s ease infinite;}
+.bubble-audio{margin-top:4px;display:flex;align-items:center;gap:8px;min-width:160px;}
+.audio-play-btn{width:32px;height:32px;border-radius:50%;background:var(--rose-deep);border:none;color:white;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.85rem;flex-shrink:0;transition:transform .15s;}
+.audio-play-btn:active{transform:scale(.9);}
+.audio-waveform{flex:1;height:28px;display:flex;align-items:center;gap:2px;cursor:pointer;}
+.audio-bar{width:3px;border-radius:2px;background:var(--rose);transition:height .1s;}
+.brow.mine .audio-bar{background:rgba(255,255,255,.7);}
+.audio-dur{font-size:.68rem;opacity:.6;white-space:nowrap;}
+.brow.mine .audio-dur{color:rgba(255,255,255,.75);}
+.rec-timer{font-size:.8rem;color:var(--rose-deep);font-weight:500;min-width:36px;}
+
+/* ── LOCATION ── */
+.loc-bubble{display:flex;align-items:center;gap:10px;padding:6px 2px;cursor:pointer;}
+.loc-map-thumb{width:180px;height:100px;border-radius:12px;object-fit:cover;display:block;margin-top:6px;border:1px solid var(--border);}
+.loc-pin{font-size:1.4rem;}
+.loc-info{flex:1;min-width:0;}
+.loc-title{font-weight:500;font-size:.9rem;}
+.loc-coords{font-size:.72rem;color:var(--text-soft);margin-top:2px;}
+.brow.mine .loc-coords{color:rgba(255,255,255,.7);}
+.loc-btn{background:none;border:none;font-size:1.1rem;cursor:pointer;opacity:.55;transition:opacity .15s;flex-shrink:0;padding:2px;}
+.loc-btn:hover{opacity:1;}
+.loc-sharing{animation:pulse .9s ease infinite;}
+
+/* ── CHAT BACKGROUND ── */
+.zone.has-bg{background-size:cover;background-position:center;}
+.bg-picker-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px;}
+.bg-chip{height:52px;border-radius:12px;border:2.5px solid transparent;cursor:pointer;transition:all .15s;position:relative;overflow:hidden;}
+.bg-chip.active{border-color:var(--rose-deep);transform:scale(1.04);}
+.bg-chip span{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:1.2rem;}
+
+/* ── HEART EXPLOSION ── */
+@keyframes heartExplode{0%{opacity:1;transform:translate(-50%,-50%) scale(0)}50%{opacity:1;transform:translate(var(--tx),var(--ty)) scale(1)}100%{opacity:0;transform:translate(calc(var(--tx)*2),calc(var(--ty)*2)) scale(.5)}}
+.heart-particle{position:fixed;pointer-events:none;z-index:999;font-size:1.1rem;animation:heartExplode .8s ease-out forwards;}
+@keyframes sendPulse{0%{box-shadow:0 4px 16px rgba(201,98,120,.38)}50%{box-shadow:0 0 0 12px rgba(201,98,120,0),0 4px 16px rgba(201,98,120,.2)}100%{box-shadow:0 4px 16px rgba(201,98,120,.38)}}
+.sbtn.sent-pulse{animation:sendPulse .5s ease-out;}
 </style>
 </head>
 <body>
@@ -356,6 +396,42 @@ body{height:100vh;overflow:hidden;color:var(--text);background:var(--cream);-web
       </div>
     </div>
     <div class="ssec">
+      <h3>Chat &amp; personnalisation</h3>
+      <div class="srow" style="flex-direction:column;align-items:stretch;gap:8px;" id="bgPickerSection">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span class="sicon">🎨</span>
+          <div class="sinfo"><div class="slabel">Fond de chat</div><div class="sdesc">Personnalise l'arrière-plan de tes conversations</div></div>
+          <button class="toggle" id="bgEnabledToggle"></button>
+        </div>
+        <div class="bg-picker-grid" id="bgPickerGrid" style="display:none">
+          <div class="bg-chip active" data-bg="none"><span>⬜</span></div>
+          <div class="bg-chip" data-bg="petals"  style="background:radial-gradient(ellipse at 20% 30%,#fce8ef,transparent 60%),radial-gradient(ellipse at 80% 70%,#fde0ea,transparent 60%),#fef9f0"><span>🌸</span></div>
+          <div class="bg-chip" data-bg="stars"   style="background:linear-gradient(135deg,#1a0f2e,#2d1b4e)"><span>✨</span></div>
+          <div class="bg-chip" data-bg="sunset"  style="background:linear-gradient(135deg,#ff9a9e,#fad0c4,#ffecd2)"><span>🌅</span></div>
+          <div class="bg-chip" data-bg="mint"    style="background:linear-gradient(135deg,#d4fc79,#96e6a1)"><span>🌿</span></div>
+          <div class="bg-chip" data-bg="ocean"   style="background:linear-gradient(135deg,#a1c4fd,#c2e9fb)"><span>🌊</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="ssec">
+      <h3>Chat &amp; personnalisation</h3>
+      <div class="srow" style="flex-direction:column;align-items:stretch;gap:8px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span class="sicon">🎨</span>
+          <div class="sinfo"><div class="slabel">Fond de chat</div><div class="sdesc">Personnalise l'arrière-plan</div></div>
+          <button class="toggle" id="bgEnabledToggle"></button>
+        </div>
+        <div class="bg-picker-grid" id="bgPickerGrid" style="display:none">
+          <div class="bg-chip active" data-bg="none"><span>⬜</span></div>
+          <div class="bg-chip" data-bg="petals"  style="background:radial-gradient(ellipse at 20% 30%,#fce8ef,transparent 60%),radial-gradient(ellipse at 80% 70%,#fde0ea,transparent 60%),#fef9f0"><span>🌸</span></div>
+          <div class="bg-chip" data-bg="stars"   style="background:linear-gradient(135deg,#1a0f2e,#2d1b4e)"><span>✨</span></div>
+          <div class="bg-chip" data-bg="sunset"  style="background:linear-gradient(135deg,#ff9a9e,#fad0c4,#ffecd2)"><span>🌅</span></div>
+          <div class="bg-chip" data-bg="mint"    style="background:linear-gradient(135deg,#d4fc79,#96e6a1)"><span>🌿</span></div>
+          <div class="bg-chip" data-bg="ocean"   style="background:linear-gradient(135deg,#a1c4fd,#c2e9fb)"><span>🌊</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="ssec">
       <h3>Notifications &amp; effets</h3>
       <div class="srow">
         <span class="sicon">🔔</span>
@@ -397,6 +473,8 @@ body{height:100vh;overflow:hidden;color:var(--text);background:var(--cream);-web
       <div class="chat-hdr-name"   id="chatName">…</div>
       <div class="chat-hdr-status" id="chatStatus"></div>
     </div>
+    <button class="icon-btn" id="locShareBtn" title="Partager ma position">📍</button>
+    <button class="icon-btn" id="chatBgBtn"   title="Fond de chat">🎨</button>
   </div>
   <div class="zone" id="zone">
     <div class="empty-chat" id="emptyChat">
@@ -416,6 +494,7 @@ body{height:100vh;overflow:hidden;color:var(--text);background:var(--cream);-web
       <div class="iwrap">
         <textarea id="msgInput" rows="1" placeholder="Écris quelque chose de doux…" maxlength="1000" enterkeyhint="send"></textarea>
       </div>
+      <button class="voice-btn" id="voiceBtn" title="Message vocal">🎙️</button>
       <button class="sbtn" id="sendBtn" disabled>💌</button>
     </div>
   </div>
@@ -593,8 +672,10 @@ $("regBtn").onclick = async ()=>{
   setBtnLoading($("regBtn"),$("regTxt"),true,"Créer mon compte ✨");
   try {
     const cred=await createUserWithEmailAndPassword(auth,email,pwd);
-    await updateProfile(cred.user,{displayName:name});
+    // Save profile in DB first with the chosen name, THEN update Auth displayName
     await saveProfile(cred.user,name,selAvatar,tag);
+    await updateProfile(cred.user,{displayName:name});
+    // onAuthStateChanged will now find the profile already saved in DB
   } catch(e){
     setBtnLoading($("regBtn"),$("regTxt"),false,"Créer mon compte ✨");
     const msg=authErr(e.code);
@@ -611,8 +692,11 @@ async function googleAuth(){
     const {user}=await signInWithPopup(auth,gp);
     const snap=await get(ref(db,`users/${user.uid}`));
     if(!snap.exists()){
-      const tag=(user.displayName||"user").toLowerCase().replace(/[^a-z0-9]/g,"").slice(0,14)+Math.floor(Math.random()*99);
-      await saveProfile(user,user.displayName||"Utilisateur","🌸",tag);
+      // Use Google display name as default, clean it for tag
+      const googleName=user.displayName||"";
+      const name=googleName||"Utilisateur";
+      const tag=(googleName||"user").toLowerCase().replace(/[^a-z0-9]/g,"").slice(0,14)+Math.floor(Math.random()*99);
+      await saveProfile(user,name,"🌸",tag);
     }
   } catch(e){ if(e.code!=="auth/popup-closed-by-user") showToast("Erreur Google 😕"); }
 }
@@ -641,11 +725,19 @@ onAuthStateChanged(auth, async fbUser=>{
   try{
     let snap=await get(ref(db,`users/${fbUser.uid}`));
     if(!snap.exists()){
+      // Profile not in DB yet (e.g. Google new user)
+      // Use fbUser.displayName as the name (set by Google or updateProfile)
+      const name=fbUser.displayName||"Utilisateur";
       const tag=(fbUser.displayName||"user").toLowerCase().replace(/[^a-z0-9]/g,"").slice(0,14)+Math.floor(Math.random()*99);
-      await saveProfile(fbUser,fbUser.displayName||"Utilisateur","🌸",tag);
+      await saveProfile(fbUser,name,"🌸",tag);
       snap=await get(ref(db,`users/${fbUser.uid}`));
     }
     me=snap.val();
+    // Always sync me.name from DB (the chosen name at registration)
+    if(!me.name && fbUser.displayName) {
+      await set(ref(db,`users/${fbUser.uid}/name`), fbUser.displayName);
+      me.name = fbUser.displayName;
+    }
   } catch(e){ showToast("Erreur de profil 😕"); return; }
 
   $("loginScreen").classList.add("off"); $("registerScreen").classList.add("off");
@@ -657,7 +749,7 @@ onAuthStateChanged(auth, async fbUser=>{
   $("myTag").textContent="@"+(me.tag||me.uid.slice(0,8));
 
   const presRef=ref(db,`presence/${me.uid}`);
-  set(presRef,{uid:me.uid,name:me.name,online:true,ts:serverTimestamp()});
+  set(presRef,{uid:me.uid,name:me.name||"Utilisateur",avatar:me.avatar||"🌸",online:true,ts:serverTimestamp()});
   onDisconnect(presRef).update({online:false,ts:serverTimestamp()});
 
   buildEmojiBar(); startContactsListener(); loadPrefsDB();
@@ -916,9 +1008,14 @@ function openChat(contact){
   $("zone").innerHTML='<div class="empty-chat" id="emptyChat"><div style="font-size:3rem;animation:hbeat 2s infinite">💌</div><p>Aucun message encore…<br>Dis bonjour ! ♡</p></div>';
   atBottom=true;
   const cid=getChatId(me.uid,contact.uid);
+  applyChatBg(currentBg);
+  // Reset location btn
+  if(locWatcher!==null){ navigator.geolocation.clearWatch(locWatcher); locWatcher=null; }
+  $("locShareBtn").classList.remove("loc-sharing");
   chatUnsubs.push(onValue(ref(db,`presence/${contact.uid}`),s=>{
     $("chatStatus").textContent=s.exists()&&s.val().online?"En ligne 🟢":"Hors ligne";
   }));
+  chatUnsubs.push(watchLiveLocation(cid, contact.uid));
   chatUnsubs.push(onChildAdded(ref(db,`chats/${cid}/messages`),s=>{
     if(shownMsgs.has(s.key))return; shownMsgs.add(s.key);
     addBubble({...s.val(),_key:s.key});
@@ -950,16 +1047,32 @@ function addBubble(msg){
   const row=document.createElement("div");
   row.className=`brow ${isMine?"mine":"theirs"}`;
   const mediaHtml=msg.image?`<img class="bmedia" src="${msg.image}" alt="photo" loading="lazy"/>`:"";
+  const locHtml=msg.location?`
+    <div class="loc-bubble">
+      <span class="loc-pin">📍</span>
+      <div class="loc-info">
+        <div class="loc-title">Position partagée</div>
+        <div class="loc-coords">${msg.location.lat.toFixed(5)}, ${msg.location.lng.toFixed(5)}</div>
+      </div>
+      <a href="${msg.location.mapUrl}" target="_blank" style="font-size:1.2rem;text-decoration:none">🗺️</a>
+    </div>
+    ${msg.location.staticMap?`<img src="${msg.location.staticMap}" class="loc-map-thumb" alt="carte"/>`:""}
+  `:"";
   row.innerHTML=`
     <div class="bav">${avHtml(isMine?me.photoURL:currentChat?.photoURL, isMine?me.avatar:currentChat?.avatar)}</div>
     <div>
       <div class="bubble">
         ${mediaHtml}
+        ${locHtml}
+        ${msg.audio?`<div class="audio-placeholder" data-src="${msg.audio}" data-dur="${msg.audioDur||0}"></div>`:""}
         ${txt?`<div class="btext${isEmoji?" big":""}">${esc(txt)}</div>`:""}
         <div class="btime">${timeStr}</div>
       </div>
       <div class="breacts" id="br-${msg._key}"></div>
     </div>`;
+  // Replace audio placeholder with real player
+  const ph=row.querySelector(".audio-placeholder");
+  if(ph){ const ab=buildAudioBubble(ph.dataset.src, parseInt(ph.dataset.dur)||0); ph.replaceWith(ab); }
   const bub=row.querySelector(".bubble");
   let pt,moved=false;
   bub.addEventListener("touchstart",()=>{moved=false;pt=setTimeout(()=>{if(!moved)openRpop(null,null,msg._key);},500);},{passive:true});
@@ -970,8 +1083,9 @@ function addBubble(msg){
   if(img) img.onclick=()=>{$("lightboxImg").src=img.src;$("lightbox").classList.add("on");};
   zone.appendChild(row);
   if(atBottom) zone.scrollTop=zone.scrollHeight; else $("scrollBtn").classList.add("on");
+  const notifBody=msg.audio?"🎙️ Message vocal":msg.location?"📍 Position":msg.image?"📷 Photo":txt;
   if(!isMine&&Notification.permission==="granted"){
-    try{new Notification(`💌 ${currentChat?.name}`,{body:msg.image?"📷 Photo":txt});}catch(_){}
+    try{new Notification(`💌 ${currentChat?.name}`,{body:notifBody});}catch(_){}
     spawnHeart(false);
   }
 }
@@ -985,18 +1099,23 @@ $("msgInput").oninput=()=>{
   $("sendBtn").disabled=!ta.value.trim();
   if(!currentChat) return;
   const cid=getChatId(me.uid,currentChat.uid);
-  set(ref(db,`chats/${cid}/typing/${me.uid}`),{name:me.name});
+  set(ref(db,`chats/${cid}/typing/${me.uid}`),{name:me.name||"…"});
   clearTimeout(typingTimer);
   typingTimer=setTimeout(()=>remove(ref(db,`chats/${cid}/typing/${me.uid}`)),2000);
 };
 function send(extra={}){
   if(!currentChat) return;
   const ta=$("msgInput"), txt=ta.value.trim();
-  if(!txt&&!extra.image) return;
+  if(!txt&&!extra.image&&!extra.audio&&!extra.location) return;
   const cid=getChatId(me.uid,currentChat.uid);
   push(ref(db,`chats/${cid}/messages`),{text:txt,sender:me.uid,ts:serverTimestamp(),...extra}).catch(()=>showToast("Erreur d'envoi 😕"));
   ta.value=""; ta.style.height="auto"; $("sendBtn").disabled=true;
   remove(ref(db,`chats/${cid}/typing/${me.uid}`)); clearTimeout(typingTimer);
+  // Heart explosion on send button
+  const r=$("sendBtn").getBoundingClientRect();
+  explodeHearts(r.left+r.width/2, r.top+r.height/2, 10);
+  $("sendBtn").classList.add("sent-pulse");
+  setTimeout(()=>$("sendBtn").classList.remove("sent-pulse"),500);
   spawnHeart(true); ta.focus();
 }
 $("imgInput").onchange=async e=>{
@@ -1061,6 +1180,226 @@ function spawnHeart(fromSend){
   else{h.style.left=(Math.random()*80+10)+"vw";h.style.top="70vh";}
   document.body.appendChild(h); setTimeout(()=>h.remove(),1600);
 }
+
+
+/* ══════════════════════════════════════════
+   VOICE MESSAGES
+══════════════════════════════════════════ */
+let mediaRecorder = null, audioChunks = [], recInterval = null, recSeconds = 0;
+
+$("voiceBtn").onclick = async () => {
+  if (mediaRecorder && mediaRecorder.state === "recording") {
+    // Stop recording
+    mediaRecorder.stop();
+    return;
+  }
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    audioChunks = []; recSeconds = 0;
+    mediaRecorder = new MediaRecorder(stream, { mimeType: MediaRecorder.isTypeSupported("audio/webm") ? "audio/webm" : "audio/ogg" });
+    mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
+    mediaRecorder.onstop = async () => {
+      clearInterval(recInterval);
+      $("voiceBtn").classList.remove("recording");
+      $("voiceBtn").textContent = "🎙️";
+      stream.getTracks().forEach(t => t.stop());
+      if (audioChunks.length === 0) return;
+      const blob = new Blob(audioChunks, { type: audioChunks[0].type });
+      if (blob.size > 3 * 1024 * 1024) { showToast("Audio trop long (max ~3 min) 😕"); return; }
+      const reader = new FileReader();
+      reader.onload = ev => send({ audio: ev.target.result, audioDur: recSeconds, text: "" });
+      reader.readAsDataURL(blob);
+    };
+    mediaRecorder.start(100);
+    $("voiceBtn").classList.add("recording");
+    recInterval = setInterval(() => {
+      recSeconds++;
+      const m = String(Math.floor(recSeconds/60)).padStart(2,"0");
+      const s = String(recSeconds%60).padStart(2,"0");
+      $("voiceBtn").textContent = m+":"+s;
+      if (recSeconds >= 180) mediaRecorder.stop();
+    }, 1000);
+  } catch(e) {
+    showToast("Micro non accessible 😕");
+  }
+};
+
+function makeWaveform(bars=16) {
+  let html = "";
+  for(let i=0;i<bars;i++){
+    const h = 4 + Math.random()*20;
+    html += `<div class="audio-bar" style="height:${h}px"></div>`;
+  }
+  return html;
+}
+
+function buildAudioBubble(src, dur) {
+  const durStr = dur ? (String(Math.floor(dur/60)).padStart(2,"0")+":"+String(dur%60).padStart(2,"0")) : "0:00";
+  const div = document.createElement("div");
+  div.className = "bubble-audio";
+  div.innerHTML = `
+    <button class="audio-play-btn" title="Écouter">▶</button>
+    <div class="audio-waveform">${makeWaveform()}</div>
+    <span class="audio-dur">${durStr}</span>`;
+  const btn = div.querySelector(".audio-play-btn");
+  let audio = null;
+  btn.onclick = () => {
+    if (!audio) { audio = new Audio(src); audio.onended = () => { btn.textContent="▶"; }; }
+    if (audio.paused) { audio.play(); btn.textContent="⏸"; }
+    else { audio.pause(); btn.textContent="▶"; }
+  };
+  return div;
+}
+
+/* ══════════════════════════════════════════
+   LOCATION SHARING
+══════════════════════════════════════════ */
+let locWatcher = null;
+
+$("locShareBtn").onclick = () => {
+  if (locWatcher !== null) {
+    // Stop sharing
+    navigator.geolocation.clearWatch(locWatcher);
+    locWatcher = null;
+    $("locShareBtn").classList.remove("loc-sharing");
+    $("locShareBtn").title = "Partager ma position";
+    if (currentChat) remove(ref(db, `chats/${getChatId(me.uid,currentChat.uid)}/location/${me.uid}`));
+    showToast("Partage de position arrêté 📍");
+    return;
+  }
+  if (!navigator.geolocation) { showToast("Géolocalisation non supportée 😕"); return; }
+  navigator.geolocation.getCurrentPosition(pos => {
+    sendLocation(pos.coords.latitude, pos.coords.longitude);
+    $("locShareBtn").classList.add("loc-sharing");
+    $("locShareBtn").title = "Arrêter le partage";
+    showToast("Position partagée ! 📍");
+    // Watch for updates
+    locWatcher = navigator.geolocation.watchPosition(pos2 => {
+      if (!currentChat) return;
+      set(ref(db, `chats/${getChatId(me.uid,currentChat.uid)}/location/${me.uid}`), {
+        lat: pos2.coords.latitude, lng: pos2.coords.longitude,
+        name: me.name, ts: Date.now()
+      });
+    }, null, { enableHighAccuracy: true, maximumAge: 10000 });
+  }, () => showToast("Position refusée 😕"), { enableHighAccuracy: true });
+};
+
+function sendLocation(lat, lng) {
+  if (!currentChat) return;
+  const mapUrl = `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}&zoom=16`;
+  const staticMap = `https://staticmap.openstreetmap.de/staticmap.php?center=${lat},${lng}&zoom=15&size=300x150&markers=${lat},${lng},red`;
+  send({ location: { lat, lng, mapUrl, staticMap }, text: "" });
+}
+
+/* Watch incoming live location */
+function watchLiveLocation(cid, contactUid) {
+  return onValue(ref(db, `chats/${cid}/location/${contactUid}`), snap => {
+    if (!snap.exists()) return;
+    const loc = snap.val();
+    // Show/update a persistent location bubble
+    let liveEl = $("live-loc-" + contactUid);
+    if (!liveEl) {
+      liveEl = document.createElement("div");
+      liveEl.id = "live-loc-" + contactUid;
+      liveEl.className = "brow theirs";
+      liveEl.style.animation = "none";
+      liveEl.innerHTML = `<div class="bav">${avHtml(currentChat?.photoURL, currentChat?.avatar)}</div>
+        <div><div class="bubble">
+          <div class="loc-bubble">
+            <span class="loc-pin">📍</span>
+            <div class="loc-info">
+              <div class="loc-title">${esc(loc.name)} est ici (live)</div>
+              <div class="loc-coords" id="loc-coords-${contactUid}">${loc.lat.toFixed(5)}, ${loc.lng.toFixed(5)}</div>
+            </div>
+            <a href="https://www.openstreetmap.org/?mlat=${loc.lat}&mlon=${loc.lng}&zoom=16" target="_blank" style="font-size:1.2rem;text-decoration:none">🗺️</a>
+          </div>
+          <div class="btime" id="loc-time-${contactUid}"></div>
+        </div></div>`;
+      $("zone").appendChild(liveEl);
+      $("zone").scrollTop = $("zone").scrollHeight;
+    } else {
+      const coordEl = $(`loc-coords-${contactUid}`);
+      if (coordEl) coordEl.textContent = `${loc.lat.toFixed(5)}, ${loc.lng.toFixed(5)}`;
+    }
+    const timeEl = $(`loc-time-${contactUid}`);
+    if (timeEl && loc.ts) timeEl.textContent = fmtTime(loc.ts);
+  });
+}
+
+/* ══════════════════════════════════════════
+   CHAT BACKGROUND
+══════════════════════════════════════════ */
+const BG_STYLES = {
+  none:   "",
+  petals: "radial-gradient(ellipse at 20% 30%,#fce8ef,transparent 60%),radial-gradient(ellipse at 80% 70%,#fde0ea,transparent 60%),#fef9f0",
+  stars:  "linear-gradient(135deg,#1a0f2e,#2d1b4e)",
+  sunset: "linear-gradient(135deg,#ff9a9e,#fad0c4,#ffecd2)",
+  mint:   "linear-gradient(135deg,#d4fc79,#96e6a1)",
+  ocean:  "linear-gradient(135deg,#a1c4fd,#c2e9fb)",
+};
+let currentBg = localStorage.getItem("nm_chatbg") || "none";
+
+function applyChatBg(bg) {
+  currentBg = bg;
+  const zone = $("zone");
+  if (!zone) return;
+  if (bg === "none") {
+    zone.classList.remove("has-bg");
+    zone.style.background = "";
+  } else {
+    zone.classList.add("has-bg");
+    zone.style.background = BG_STYLES[bg];
+  }
+  document.querySelectorAll(".bg-chip").forEach(c => c.classList.toggle("active", c.dataset.bg === bg));
+  localStorage.setItem("nm_chatbg", bg);
+}
+
+$("bgEnabledToggle").onclick = () => {
+  const on = !$("bgEnabledToggle").classList.contains("on");
+  $("bgEnabledToggle").classList.toggle("on", on);
+  $("bgPickerGrid").style.display = on ? "grid" : "none";
+  if (!on) applyChatBg("none");
+  else applyChatBg(currentBg === "none" ? "petals" : currentBg);
+};
+$("bgPickerGrid").onclick = e => {
+  const c = e.target.closest(".bg-chip"); if (!c) return;
+  applyChatBg(c.dataset.bg);
+};
+$("chatBgBtn").onclick = () => {
+  $("settingsBtn").click();
+  setTimeout(() => {
+    $("bgPickerSection")?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, 200);
+};
+
+// Init bg on load
+(function initBg(){
+  if (currentBg && currentBg !== "none") {
+    $("bgEnabledToggle").classList.add("on");
+    $("bgPickerGrid").style.display = "grid";
+  }
+})();
+
+/* ══════════════════════════════════════════
+   HEART EXPLOSION ANIMATION
+══════════════════════════════════════════ */
+const EXPLOSION_HEARTS = ["💗","💕","❤️","💖","💝","✨","🌸","💫"];
+
+function explodeHearts(x, y, count=8) {
+  for(let i=0;i<count;i++){
+    const el = document.createElement("div");
+    el.className = "heart-particle";
+    el.textContent = EXPLOSION_HEARTS[Math.floor(Math.random()*EXPLOSION_HEARTS.length)];
+    const angle = (i / count) * 2 * Math.PI;
+    const dist = 40 + Math.random()*40;
+    const tx = Math.cos(angle) * dist + "px";
+    const ty = Math.sin(angle) * dist + "px";
+    el.style.cssText = `left:${x}px;top:${y}px;--tx:${tx};--ty:${ty};animation-delay:${Math.random()*0.1}s;animation-duration:${0.6+Math.random()*0.3}s`;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 1100);
+  }
+}
+
 </script>
 </body>
 </html>
