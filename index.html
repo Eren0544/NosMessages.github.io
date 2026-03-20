@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>💕 NosMessages.love</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;font-family:'DM Sans',sans-serif;}
+  :root{
+    --rose:#e8a0b0;--rose-deep:#c9627a;--rose-light:#fdf0f4;
+    --rose-mid:#f7d5df;--cream:#fef9f0;--text:#3a1a26;
+    --text-soft:#9b6070;--border:#f0c8d4;--shadow:rgba(200,90,120,.13);
+    --online:#6dbb8a;
+  }
+  html,body{height:100%;background:var(--cream);overflow:hidden;color:var(--text);}
+  body{background:radial-gradient(ellipse at 20% 20%,#fce8ef,transparent 50%),radial-gradient(ellipse at 80% 80%,#fde0ea,transparent 50%),var(--cream);}
+
+  /* scrollbar */
+  ::-webkit-scrollbar{width:3px}::-webkit-scrollbar-thumb{background:var(--border);border-radius:10px}
+
+  /* animations */
+  @keyframes fallDown{0%{transform:translateY(0) rotate(0deg);opacity:.8}100%{transform:translateY(110vh) rotate(360deg);opacity:0}}
+  @keyframes slideUp{from{opacity:0;transform:translateY(24px) scale(.96)}to{opacity:1;transform:none}}
+  @keyframes floatUp{0%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-140px) scale(1.6)}}
+  @keyframes bounce{0%,80%,100%{transform:translateY(0);opacity:.4}40%{transform:translateY(-7px);opacity:1}}
+  @keyframes popIn{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:none}}
+  @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.18)}}
+  @keyframes bubbleIn{from{opacity:0;transform:translateY(10px) scale(.93)}to{opacity:1;transform:none}}
+
+  /* petals */
+  .petals{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:0;}
+  .petal{position:absolute;top:-50px;user-select:none;animation:fallDown linear infinite;}
+
+  /* ── SETUP ── */
+  #setup{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:16px;}
+  .card{background:white;border:1.5px solid var(--border);border-radius:28px;padding:40px 32px;max-width:400px;width:100%;text-align:center;box-shadow:0 20px 60px var(--shadow);overflow-y:auto;max-height:92vh;animation:slideUp .5s cubic-bezier(.175,.885,.32,1.275);}
+  .card h2{font-family:'Cormorant Garamond',serif;font-size:1.95rem;font-weight:600;margin-bottom:6px;}
+  .card .sub{color:var(--text-soft);font-size:.88rem;margin-bottom:22px;line-height:1.55;}
+  .name-inp{width:100%;padding:13px 20px;border:1.5px solid var(--border);border-radius:50px;font-family:'Cormorant Garamond',serif;font-size:1.05rem;color:var(--text);background:var(--rose-light);outline:none;text-align:center;margin-bottom:18px;transition:border-color .2s,box-shadow .2s;}
+  .name-inp:focus{border-color:var(--rose);box-shadow:0 0 0 4px rgba(232,160,176,.18);}
+  .av-label{font-size:.76rem;color:var(--text-soft);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;display:block;}
+  .av-row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:22px;}
+  .av-btn{font-size:1.45rem;border:2.5px solid transparent;border-radius:50%;width:46px;height:46px;background:var(--rose-light);cursor:pointer;transition:all .18s;display:flex;align-items:center;justify-content:center;}
+  .av-btn:hover{transform:scale(1.12);}
+  .av-btn.sel{border-color:var(--rose-deep);background:var(--rose-mid);transform:scale(1.16);}
+  .enter-btn{width:100%;padding:14px;background:linear-gradient(135deg,var(--rose),var(--rose-deep));border:none;border-radius:50px;color:white;font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-weight:600;cursor:pointer;transition:all .2s;box-shadow:0 4px 20px rgba(201,98,122,.3);}
+  .enter-btn:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(201,98,122,.45);}
+  .enter-btn:active{transform:scale(.97);}
+  .fb-badge{margin-top:14px;font-size:.78rem;color:var(--text-soft);display:flex;align-items:center;gap:6px;justify-content:center;}
+  .fb-dot{width:8px;height:8px;border-radius:50%;background:var(--online);box-shadow:0 0 6px var(--online);}
+
+  /* ── APP ── */
+  #app{display:none;flex-direction:column;height:100vh;max-width:720px;margin:0 auto;position:relative;z-index:2;}
+  #app.on{display:flex;}
+
+  .notif-bar{display:flex;align-items:center;gap:10px;padding:7px 16px;background:var(--rose-light);border-bottom:1px solid var(--border);font-size:.76rem;color:var(--text-soft);flex-shrink:0;}
+  .notif-bar button{margin-left:auto;background:var(--rose);border:none;border-radius:20px;padding:4px 14px;color:white;font-size:.72rem;cursor:pointer;transition:background .15s;}
+  .notif-bar button:hover{background:var(--rose-deep);}
+
+  .hdr{padding:14px 18px 11px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border);background:rgba(255,255,255,.93);backdrop-filter:blur(12px);flex-shrink:0;}
+  .hdr-av{width:42px;height:42px;border-radius:50%;background:var(--rose-mid);display:flex;align-items:center;justify-content:center;font-size:1.35rem;border:2px solid var(--rose);flex-shrink:0;}
+  .hdr-name{font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:600;line-height:1.1;}
+  .hdr-status{display:flex;align-items:center;gap:5px;margin-top:2px;}
+  .status-dot{width:7px;height:7px;border-radius:50%;background:#ccc;transition:background .3s;}
+  .status-dot.on{background:var(--online);box-shadow:0 0 6px var(--online);}
+  .hdr-btns{display:flex;gap:6px;}
+  .hdr-btn{width:34px;height:34px;border-radius:50%;background:var(--rose-light);border:1px solid var(--border);font-size:.9rem;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;}
+  .hdr-btn:hover{background:var(--rose-mid);transform:scale(1.08);}
+
+  /* error banner */
+  .err-bar{background:#fff3cd;border-bottom:1px solid #ffc107;padding:8px 16px;font-size:.78rem;color:#856404;flex-shrink:0;display:none;}
+  .err-bar.on{display:block;}
+
+  /* zone */
+  .zone{flex:1;overflow-y:auto;padding:14px 14px 8px;display:flex;flex-direction:column;gap:4px;scroll-behavior:smooth;}
+  .empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:40px;color:var(--text-soft);}
+  .empty p{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1.05rem;}
+
+  /* bubbles */
+  .brow{display:flex;align-items:flex-end;gap:8px;animation:bubbleIn .32s cubic-bezier(.175,.885,.32,1.275);max-width:82%;}
+  .brow.mine{align-self:flex-end;flex-direction:row-reverse;}
+  .brow.theirs{align-self:flex-start;}
+  .bav{width:28px;height:28px;border-radius:50%;background:var(--rose-mid);display:flex;align-items:center;justify-content:center;font-size:.85rem;flex-shrink:0;border:1.5px solid var(--border);}
+  .bubble{padding:10px 15px;border-radius:20px;word-break:break-word;cursor:default;}
+  .brow.mine .bubble{background:linear-gradient(135deg,#f4afc0,var(--rose-deep));color:white;border-radius:20px 20px 4px 20px;}
+  .brow.theirs .bubble{background:white;color:var(--text);border:1px solid var(--border);border-radius:20px 20px 20px 4px;}
+  .bsender{font-size:.67rem;font-weight:500;margin-bottom:4px;opacity:.75;letter-spacing:.5px;text-transform:uppercase;}
+  .btext{font-family:'Cormorant Garamond',serif;font-size:1.05rem;line-height:1.45;}
+  .btext.big{font-size:2rem;line-height:1.2;}
+  .btime{font-size:.63rem;opacity:.6;text-align:right;margin-top:4px;}
+  .brow.mine .btime{color:rgba(255,255,255,.75);}
+  .breacts{display:flex;flex-wrap:wrap;gap:3px;margin-top:4px;}
+  .brow.mine .breacts{justify-content:flex-end;}
+  .brow.theirs .breacts{justify-content:flex-start;}
+  .rchip{background:white;border:1px solid var(--border);border-radius:20px;padding:2px 7px;font-size:.73rem;cursor:pointer;transition:transform .15s;display:flex;align-items:center;gap:3px;}
+  .rchip:hover{transform:scale(1.1);}
+  .rchip span{color:var(--text-soft);font-size:.63rem;}
+
+  /* typing */
+  .typing{display:none;align-items:center;gap:8px;padding:4px 14px 6px;}
+  .typing.on{display:flex;}
+  .typing-bub{background:white;border:1px solid var(--border);border-radius:20px;padding:9px 14px;display:flex;align-items:center;gap:4px;}
+  .tdot{width:6px;height:6px;border-radius:50%;background:var(--rose);animation:bounce 1s infinite;}
+  .tdot:nth-child(2){animation-delay:.2s}.tdot:nth-child(3){animation-delay:.4s}
+  .tname{font-size:.72rem;color:var(--text-soft);}
+
+  /* emoji bar */
+  .ebar{display:flex;gap:3px;overflow-x:auto;padding:6px 14px;border-top:1px solid var(--border);background:rgba(255,255,255,.9);scrollbar-width:none;flex-shrink:0;}
+  .ebar::-webkit-scrollbar{display:none;}
+  .ebtn{font-size:1.2rem;background:none;border:none;border-radius:8px;padding:4px 5px;cursor:pointer;transition:transform .15s,background .15s;flex-shrink:0;}
+  .ebtn:hover{transform:scale(1.35);background:var(--rose-light);}
+
+  /* input */
+  .bbar{padding:8px 12px 16px;background:rgba(255,255,255,.95);backdrop-filter:blur(10px);border-top:1px solid var(--border);flex-shrink:0;}
+  .irow{display:flex;gap:8px;align-items:flex-end;}
+  .iwrap{flex:1;background:var(--rose-light);border:1.5px solid var(--border);border-radius:22px;padding:10px 15px;display:flex;align-items:flex-end;gap:8px;transition:border-color .2s,box-shadow .2s;}
+  .iwrap:focus-within{border-color:var(--rose);box-shadow:0 0 0 4px rgba(232,160,176,.16);}
+  #msgInput{flex:1;border:none;outline:none;background:transparent;resize:none;font-family:'Cormorant Garamond',serif;font-size:1.05rem;color:var(--text);max-height:100px;min-height:24px;line-height:1.4;}
+  #msgInput::placeholder{color:var(--border);font-style:italic;}
+  .ccount{font-size:.63rem;color:var(--border);align-self:flex-end;white-space:nowrap;}
+  .ccount.warn{color:var(--rose-deep);}
+  .sbtn{width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,var(--rose),var(--rose-deep));border:none;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1.1rem;cursor:pointer;transition:all .2s;box-shadow:0 4px 16px rgba(201,98,122,.35);}
+  .sbtn:hover:not(:disabled){transform:scale(1.1);box-shadow:0 6px 22px rgba(201,98,122,.55);}
+  .sbtn:active:not(:disabled){transform:scale(.93);}
+  .sbtn:disabled{opacity:.45;cursor:default;}
+
+  /* reaction popup */
+  #rpop{position:fixed;background:white;border:1.5px solid var(--border);border-radius:40px;padding:6px 10px;display:none;gap:6px;box-shadow:0 8px 32px var(--shadow);z-index:600;animation:popIn .2s ease-out;}
+  #rpop.on{display:flex;}
+  .rpbtn{font-size:1.3rem;background:none;border:none;padding:4px;cursor:pointer;transition:transform .15s;border-radius:50%;}
+  .rpbtn:hover{transform:scale(1.35);}
+
+  /* floating hearts */
+  .fheart{position:fixed;pointer-events:none;animation:floatUp 1.5s ease-out forwards;z-index:999;font-size:1.4rem;}
+
+  /* scroll btn */
+  #scrollBtn{position:fixed;bottom:100px;right:14px;width:34px;height:34px;border-radius:50%;background:var(--rose-deep);color:white;border:none;cursor:pointer;font-size:.9rem;box-shadow:0 4px 16px var(--shadow);z-index:50;display:none;align-items:center;justify-content:center;transition:transform .15s;}
+  #scrollBtn.on{display:flex;}
+  #scrollBtn:hover{transform:scale(1.1);}
+
+  /* toast */
+  #toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:var(--text);color:white;border-radius:20px;padding:8px 20px;font-size:.8rem;z-index:1000;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .3s;}
+  #toast.on{opacity:1;}
+</style>
+</head>
+<body>
+
+<!-- PETALS -->
+<div class="petals" id="petals"></div>
+
+<!-- SETUP -->
+<div id="setup">
+  <div class="card">
+    <div style="font-size:2.8rem;margin-bottom:14px">💕</div>
+    <h2>NosMessages.love</h2>
+    <p class="sub">Un espace rien que pour vous deux ♡<br>Choisis ton prénom et ton avatar</p>
+
+    <input id="nameInp" class="name-inp" type="text" placeholder="Ton prénom…" maxlength="20" autocomplete="off" />
+
+    <span class="av-label">Ton avatar</span>
+    <div class="av-row" id="avRow">
+      <button class="av-btn sel" data-av="🌸">🌸</button>
+      <button class="av-btn" data-av="💗">💗</button>
+      <button class="av-btn" data-av="🌹">🌹</button>
+      <button class="av-btn" data-av="🦋">🦋</button>
+      <button class="av-btn" data-av="🌙">🌙</button>
+      <button class="av-btn" data-av="⭐">⭐</button>
+      <button class="av-btn" data-av="🐱">🐱</button>
+      <button class="av-btn" data-av="🐰">🐰</button>
+    </div>
+
+    <button class="enter-btn" id="enterBtn">Entrer ✨</button>
+
+    <div class="fb-badge">
+      <span class="fb-dot"></span>
+      Firebase Realtime Database connecté
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="err-bar" id="errBar"></div>
+
+  <div class="notif-bar" id="notifBar">
+    🔔 Active les notifications pour ne rien manquer
+    <button id="notifBtn">Activer</button>
+  </div>
+
+  <div class="hdr">
+    <div class="hdr-av" id="hdrAv">🌸</div>
+    <div style="flex:1">
+      <div class="hdr-name" id="hdrName">NosMessages.love 💕</div>
+      <div class="hdr-status">
+        <div class="status-dot" id="sDot"></div>
+        <span id="sTxt" style="font-size:.7rem;color:var(--text-soft)">Connexion…</span>
+      </div>
+    </div>
+    <div class="hdr-btns">
+      <button class="hdr-btn" id="clearBtn" title="Masquer mes messages">🗑️</button>
+      <button class="hdr-btn" id="notifBtn2" title="Notifications">🔔</button>
+    </div>
+  </div>
+
+  <div class="zone" id="zone">
+    <div class="empty" id="emptyEl">
+      <div style="font-size:3rem;animation:pulse 2s infinite">💌</div>
+      <p>Aucun message encore…<br>Sois le premier à écrire ♡</p>
+    </div>
+  </div>
+
+  <div class="typing" id="typingEl">
+    <div class="typing-bub">
+      <div class="tdot"></div><div class="tdot"></div><div class="tdot"></div>
+    </div>
+    <span class="tname" id="tName"></span>
+  </div>
+
+  <div class="ebar" id="ebar"></div>
+
+  <div class="bbar">
+    <div class="irow">
+      <div class="iwrap">
+        <textarea id="msgInput" rows="1" placeholder="Écris quelque chose de doux…" maxlength="500"></textarea>
+        <span class="ccount" id="ccount"></span>
+      </div>
+      <button class="sbtn" id="sendBtn" disabled>💌</button>
+    </div>
+  </div>
+</div>
+
+<div id="rpop"></div>
+<button id="scrollBtn">↓</button>
+<div id="toast"></div>
+
+<!-- FIREBASE -->
+<script type="module">
+import { initializeApp }   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, push, onChildAdded, set, remove, onValue, onDisconnect, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+/* ── Config ── */
+const FB = {
+  apiKey:            "AIzaSyACVl_0Np7jy_J02O3IvdfJeI3W82XrNkA",
+  authDomain:        "sendmessage-8fe36.firebaseapp.com",
+  projectId:         "sendmessage-8fe36",
+  storageBucket:     "sendmessage-8fe36.firebasestorage.app",
+  messagingSenderId: "30430191114",
+  appId:             "1:30430191114:web:dcd21525ce505cb1a849f3",
+  databaseURL:       "https://sendmessage-8fe36-default-rtdb.firebaseio.com",
+};
+const app = initializeApp(FB);
+const db  = getDatabase(app);
+
+/* ── State ── */
+let myName = "", myAvatar = "🌸", atBottom = true;
+const shownKeys = new Set();
+const reactions = {};
+let currentRpop = null;
+let typingTimer = null;
+
+const EMOJIS    = ["❤️","💕","😍","🥰","😘","💋","🌸","🌹","✨","😂","😊","🥺","😢","🙏","👏","🎉","💯","🔥","🫶","💝","🌷","🌺","🍓","🌈","🦋"];
+const REACTS    = ["❤️","😂","😮","😢","👏","🔥","🥰"];
+const HEARTS    = ["💗","💕","❤️","💖","💝","🌸"];
+const PETAL_EMO = ["🌸","🌷","💮","🌺","🌹","💐"];
+
+/* ── Petals ── */
+const petalsCt = document.getElementById("petals");
+for (let i = 0; i < 18; i++) {
+  const el = document.createElement("div");
+  el.className = "petal";
+  el.textContent = PETAL_EMO[i % 6];
+  el.style.cssText = `left:${Math.random()*100}vw;font-size:${10+Math.random()*14}px;opacity:${.3+Math.random()*.4};animation-duration:${8+Math.random()*12}s;animation-delay:${Math.random()*10}s`;
+  petalsCt.appendChild(el);
+}
+
+/* ── Avatar picker ── */
+document.getElementById("avRow").addEventListener("click", e => {
+  const btn = e.target.closest(".av-btn");
+  if (!btn) return;
+  document.querySelectorAll(".av-btn").forEach(b => b.classList.remove("sel"));
+  btn.classList.add("sel");
+  myAvatar = btn.dataset.av;
+});
+
+/* ── Enter app ── */
+document.getElementById("nameInp").addEventListener("keydown", e => { if (e.key === "Enter") enter(); });
+document.getElementById("enterBtn").addEventListener("click", enter);
+
+function enter() {
+  const val = document.getElementById("nameInp").value.trim();
+  if (!val) { toast("Entre ton prénom d'abord 😊"); return; }
+  myName = val;
+  document.getElementById("setup").style.display = "none";
+  document.getElementById("app").classList.add("on");
+  document.getElementById("hdrAv").textContent   = myAvatar;
+  document.getElementById("hdrName").textContent = `Salut ${myName} 💗`;
+  buildEmojiBar();
+  initFirebase();
+  if (Notification.permission === "granted") document.getElementById("notifBar").style.display = "none";
+}
+
+/* ── Firebase init ── */
+function initFirebase() {
+  const msgsRef   = ref(db, "messages");
+  const presRef   = ref(db, `presence/${myName}`);
+  const typingRef = ref(db, `typing/${myName}`);
+
+  set(presRef, { name: myName, avatar: myAvatar, online: true })
+    .then(() => setStatus(true))
+    .catch(err => {
+      const bar = document.getElementById("errBar");
+      bar.textContent = "⚠️ Realtime Database non activée. Active-la sur console.firebase.google.com (mode test).";
+      bar.classList.add("on");
+    });
+
+  onDisconnect(presRef).remove();
+  onDisconnect(typingRef).remove();
+
+  /* online count */
+  onValue(ref(db, "presence"), snap => {
+    const c = snap.exists() ? Object.keys(snap.val()).length : 0;
+    setStatus(true, c);
+  });
+
+  /* new messages */
+  onChildAdded(msgsRef, snap => {
+    if (shownKeys.has(snap.key)) return;
+    shownKeys.add(snap.key);
+    addMessage({ ...snap.val(), _key: snap.key });
+  });
+
+  /* typing */
+  onValue(ref(db, "typing"), snap => {
+    if (!snap.exists()) { hideTyping(); return; }
+    const others = Object.entries(snap.val()).filter(([k]) => k !== myName);
+    others.length ? showTyping(others[0][1].name) : hideTyping();
+  });
+}
+
+/* ── Status ── */
+function setStatus(on, count) {
+  document.getElementById("sDot").className = "status-dot" + (on ? " on" : "");
+  document.getElementById("sTxt").textContent = on ? (count ? `${count} en ligne` : "Connecté") : "Connexion…";
+}
+
+/* ── Add message to DOM ── */
+function addMessage(msg) {
+  const zone = document.getElementById("zone");
+  document.getElementById("emptyEl")?.remove();
+
+  const isMine = msg.sender === myName;
+  const isEmoji = /^\p{Emoji}+$/u.test((msg.text||"").trim()) && msg.text.trim().length <= 8;
+  const time = msg.ts ? new Date(msg.ts).toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"}) : "";
+
+  const row = document.createElement("div");
+  row.className = "brow " + (isMine ? "mine" : "theirs");
+  row.dataset.key = msg._key;
+
+  row.innerHTML = `
+    <div class="bav">${msg.avatar || "💬"}</div>
+    <div>
+      <div class="bubble">
+        ${!isMine ? `<div class="bsender">${esc(msg.sender)}</div>` : ""}
+        <div class="btext${isEmoji?" big":""}">${esc(msg.text)}</div>
+        <div class="btime">${time}</div>
+      </div>
+      <div class="breacts" id="br-${msg._key}"></div>
+    </div>`;
+
+  /* long press / right-click for reactions */
+  const bub = row.querySelector(".bubble");
+  bub.addEventListener("contextmenu", e => { e.preventDefault(); openRpop(e.clientX, e.clientY, msg._key); });
+  let pt;
+  bub.addEventListener("touchstart",  () => { pt = setTimeout(() => openRpop(null, null, msg._key), 600); });
+  bub.addEventListener("touchend",    () => clearTimeout(pt));
+  bub.addEventListener("touchmove",   () => clearTimeout(pt));
+
+  zone.appendChild(row);
+  if (atBottom) zone.scrollTop = zone.scrollHeight;
+  else document.getElementById("scrollBtn").classList.add("on");
+
+  /* notification if not mine */
+  if (!isMine && Notification.permission === "granted") {
+    try { new Notification(`💌 ${msg.sender}`, { body: msg.text }); } catch(_) {}
+    spawnHeart(false);
+  }
+}
+
+/* ── Send ── */
+document.getElementById("sendBtn").addEventListener("click", send);
+document.getElementById("msgInput").addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }});
+document.getElementById("msgInput").addEventListener("input", onInput);
+
+function send() {
+  const ta = document.getElementById("msgInput");
+  const text = ta.value.trim();
+  if (!text) return;
+  push(ref(db, "messages"), { text, sender: myName, avatar: myAvatar, ts: serverTimestamp() })
+    .catch(() => toast("Erreur d'envoi 😕"));
+  ta.value = ""; ta.style.height = "auto";
+  document.getElementById("sendBtn").disabled = true;
+  document.getElementById("ccount").textContent = "";
+  remove(ref(db, `typing/${myName}`));
+  clearTimeout(typingTimer);
+  spawnHeart(true);
+  ta.focus();
+}
+
+function onInput() {
+  const ta = document.getElementById("msgInput");
+  ta.style.height = "auto";
+  ta.style.height = Math.min(ta.scrollHeight, 100) + "px";
+  const len = ta.value.length;
+  document.getElementById("sendBtn").disabled = !ta.value.trim();
+  const cc = document.getElementById("ccount");
+  if (len > 400) { cc.textContent = `${len}/500`; cc.classList.toggle("warn", len > 460); }
+  else cc.textContent = "";
+  set(ref(db, `typing/${myName}`), { name: myName });
+  clearTimeout(typingTimer);
+  typingTimer = setTimeout(() => remove(ref(db, `typing/${myName}`)), 2000);
+}
+
+/* ── Typing indicator ── */
+function showTyping(name) {
+  document.getElementById("tName").textContent = name + " écrit…";
+  document.getElementById("typingEl").classList.add("on");
+  const zone = document.getElementById("zone");
+  if (atBottom) zone.scrollTop = zone.scrollHeight;
+}
+function hideTyping() { document.getElementById("typingEl").classList.remove("on"); }
+
+/* ── Emoji bar ── */
+function buildEmojiBar() {
+  const bar = document.getElementById("ebar");
+  EMOJIS.forEach(e => {
+    const btn = document.createElement("button");
+    btn.className = "ebtn"; btn.textContent = e;
+    btn.addEventListener("click", () => {
+      const ta = document.getElementById("msgInput");
+      ta.value += e; ta.focus(); onInput();
+    });
+    bar.appendChild(btn);
+  });
+}
+
+/* ── Reaction popup ── */
+function openRpop(x, y, key) {
+  const pop = document.getElementById("rpop");
+  pop.innerHTML = "";
+  REACTS.forEach(em => {
+    const btn = document.createElement("button");
+    btn.className = "rpbtn"; btn.textContent = em;
+    btn.addEventListener("click", () => { addReaction(key, em); closeRpop(); });
+    pop.appendChild(btn);
+  });
+  if (x !== null) {
+    pop.style.left = Math.min(x - 80, window.innerWidth - 290) + "px";
+    pop.style.top  = (y - 64) + "px";
+    pop.style.transform = "";
+  } else {
+    pop.style.left = "50%"; pop.style.top = "40%";
+    pop.style.transform = "translateX(-50%)";
+  }
+  pop.classList.add("on");
+  currentRpop = key;
+  setTimeout(() => document.addEventListener("click", closeRpop, { once: true }), 50);
+}
+function closeRpop() { document.getElementById("rpop").classList.remove("on"); currentRpop = null; }
+
+function addReaction(key, emoji) {
+  if (!reactions[key]) reactions[key] = {};
+  reactions[key][emoji] = (reactions[key][emoji] || 0) + 1;
+  renderReactions(key);
+}
+function renderReactions(key) {
+  const zone = document.getElementById("br-" + key);
+  if (!zone) return;
+  zone.innerHTML = "";
+  Object.entries(reactions[key] || {}).filter(([,v]) => v > 0).forEach(([em, count]) => {
+    const chip = document.createElement("div");
+    chip.className = "rchip";
+    chip.innerHTML = `${em}<span>${count}</span>`;
+    chip.addEventListener("click", () => {
+      reactions[key][em] = Math.max(0, (reactions[key][em]||1) - 1);
+      renderReactions(key);
+    });
+    zone.appendChild(chip);
+  });
+}
+
+/* ── Scroll ── */
+document.getElementById("zone").addEventListener("scroll", () => {
+  const z = document.getElementById("zone");
+  atBottom = z.scrollHeight - z.scrollTop - z.clientHeight < 60;
+  document.getElementById("scrollBtn").classList.toggle("on", !atBottom);
+});
+document.getElementById("scrollBtn").addEventListener("click", () => {
+  const z = document.getElementById("zone");
+  z.scrollTop = z.scrollHeight;
+  document.getElementById("scrollBtn").classList.remove("on");
+});
+
+/* ── Clear ── */
+document.getElementById("clearBtn").addEventListener("click", () => {
+  document.querySelectorAll(`.brow.mine`).forEach(el => el.remove());
+  toast("Messages masqués localement 🗑️");
+});
+
+/* ── Notifications ── */
+function askNotif() {
+  if (!("Notification" in window)) { toast("Non supporté 😕"); return; }
+  Notification.requestPermission().then(p => {
+    if (p === "granted") {
+      document.getElementById("notifBar").style.display = "none";
+      try { new Notification("🌸 Activées !", { body: "Tu recevras ses messages en notif ♡" }); } catch(_) {}
+      toast("Notifications activées ! 🔔");
+    } else toast("Permission refusée 😕");
+  });
+}
+document.getElementById("notifBtn").addEventListener("click", askNotif);
+document.getElementById("notifBtn2").addEventListener("click", askNotif);
+
+/* ── Hearts ── */
+function spawnHeart(fromSend) {
+  const h = document.createElement("div");
+  h.className = "fheart";
+  h.textContent = HEARTS[Math.floor(Math.random() * HEARTS.length)];
+  if (fromSend) {
+    const r = document.getElementById("sendBtn").getBoundingClientRect();
+    h.style.left = r.left + "px"; h.style.top = r.top + "px";
+  } else {
+    h.style.left = (Math.random()*80+10) + "vw"; h.style.top = "70vh";
+  }
+  document.body.appendChild(h);
+  setTimeout(() => h.remove(), 1600);
+}
+
+/* ── Toast ── */
+let toastTimer2;
+function toast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.classList.add("on");
+  clearTimeout(toastTimer2);
+  toastTimer2 = setTimeout(() => t.classList.remove("on"), 3000);
+}
+
+/* ── Utils ── */
+function esc(s) {
+  return String(s)
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;").replace(/\n/g,"<br>");
+}
+</script>
+</body>
+</html>
