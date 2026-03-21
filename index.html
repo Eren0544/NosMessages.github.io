@@ -7,6 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#fdf0f4" id="themeColor">
 <title>💕 NosMessages.love</title>
+<link rel="manifest" id="pwaManifest"/>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -243,6 +244,143 @@ body{height:100vh;overflow:hidden;color:var(--text);background:var(--cream);-web
 .heart-particle{position:fixed;pointer-events:none;z-index:999;font-size:1.1rem;animation:heartExplode .8s ease-out forwards;}
 @keyframes sendPulse{0%{box-shadow:0 4px 16px rgba(201,98,120,.38)}50%{box-shadow:0 0 0 12px rgba(201,98,120,0),0 4px 16px rgba(201,98,120,.2)}100%{box-shadow:0 4px 16px rgba(201,98,120,.38)}}
 .sbtn.sent-pulse{animation:sendPulse .5s ease-out;}
+
+/* ── TABS (Contacts / Demandes) ── */
+.tabs{display:flex;gap:4px;padding:8px 14px 0;background:var(--hdr);}
+.tab-btn{flex:1;padding:8px 4px;background:none;border:none;border-radius:12px 12px 0 0;font-size:.85rem;font-weight:500;color:var(--text-soft);cursor:pointer;transition:all .18s;position:relative;}
+.tab-btn.active{background:var(--card);color:var(--rose-deep);font-weight:600;}
+.tab-badge{position:absolute;top:4px;right:8px;background:var(--rose-deep);color:white;border-radius:50%;width:18px;height:18px;font-size:.65rem;display:none;align-items:center;justify-content:center;font-weight:700;}
+.tab-badge.on{display:flex;}
+
+/* ── FRIEND REQUEST CARD ── */
+.req-item{display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid var(--border);animation:bIn .3s ease-out;}
+.req-actions{display:flex;gap:6px;flex-shrink:0;}
+.req-accept{padding:7px 14px;background:linear-gradient(135deg,var(--rose),var(--rose-deep));border:none;border-radius:50px;color:white;font-size:.82rem;font-weight:600;cursor:pointer;transition:all .15s;}
+.req-accept:hover{transform:scale(1.05);}
+.req-accept:active{transform:scale(.95);}
+.req-decline{padding:7px 12px;background:var(--input-bg);border:1px solid var(--border);border-radius:50px;color:var(--text-soft);font-size:.82rem;cursor:pointer;transition:all .15s;}
+.req-decline:hover{background:var(--rose-mid);}
+.req-sent-badge{font-size:.72rem;color:var(--text-soft);background:var(--rose-light);border:1px solid var(--border);border-radius:20px;padding:4px 10px;white-space:nowrap;}
+
+/* ── SWIPE-TO-DELETE (contact item) ── */
+.c-item-wrap{position:relative;overflow:hidden;}
+.c-delete-reveal{position:absolute;right:0;top:0;bottom:0;width:80px;background:#e05070;display:flex;align-items:center;justify-content:center;font-size:1.3rem;transform:translateX(80px);transition:transform .2s;color:white;cursor:pointer;flex-shrink:0;}
+.c-item-wrap.swiped .c-delete-reveal{transform:translateX(0);}
+.c-item-wrap.swiped .c-item{transform:translateX(-80px);}
+.c-item{transition:transform .2s;}
+
+/* ── EMPTY REQUESTS ── */
+.empty-req{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:48px 40px;color:var(--text-soft);}
+.empty-req p{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1rem;line-height:1.5;}
+
+/* ── REPLY ── */
+.reply-bar{display:none;align-items:center;gap:10px;padding:8px 14px;background:var(--rose-light);border-top:1px solid var(--border);flex-shrink:0;}
+.reply-bar.on{display:flex;}
+.reply-preview{flex:1;min-width:0;border-left:3px solid var(--rose-deep);padding-left:10px;}
+.reply-preview .rp-name{font-size:.72rem;color:var(--rose-deep);font-weight:600;}
+.reply-preview .rp-txt{font-size:.82rem;color:var(--text-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.reply-close{background:none;border:none;font-size:1.1rem;cursor:pointer;opacity:.6;flex-shrink:0;}
+.reply-quote{border-left:3px solid var(--rose-deep);padding:5px 10px;margin-bottom:6px;border-radius:0 8px 8px 0;background:rgba(232,160,176,.12);}
+.brow.mine .reply-quote{background:rgba(255,255,255,.15);}
+.reply-quote .rq-name{font-size:.68rem;color:var(--rose-deep);font-weight:600;margin-bottom:2px;}
+.brow.mine .reply-quote .rq-name{color:rgba(255,255,255,.8);}
+.reply-quote .rq-txt{font-size:.8rem;opacity:.75;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+/* ── EDIT MESSAGE ── */
+.edit-bar{display:none;align-items:center;gap:10px;padding:8px 14px;background:var(--rose-light);border-top:1px solid var(--border);flex-shrink:0;}
+.edit-bar.on{display:flex;}
+.edit-info{flex:1;min-width:0;}
+.edit-info .ei-label{font-size:.72rem;color:var(--rose-deep);font-weight:600;}
+.edit-info .ei-txt{font-size:.82rem;color:var(--text-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.edit-close{background:none;border:none;font-size:1.1rem;cursor:pointer;opacity:.6;flex-shrink:0;}
+.edited-tag{font-size:.58rem;opacity:.55;margin-left:4px;font-style:italic;}
+.brow.mine .edited-tag{color:rgba(255,255,255,.6);}
+
+/* ── CONTEXT MENU (long-press popup) ── */
+#ctxMenu{position:fixed;background:var(--card);border:1.5px solid var(--border);border-radius:18px;padding:6px;display:none;flex-direction:column;gap:2px;box-shadow:0 8px 32px var(--shadow);z-index:700;animation:popIn .18s ease-out;min-width:160px;}
+#ctxMenu.on{display:flex;}
+.ctx-item{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:12px;cursor:pointer;font-size:.88rem;transition:background .12s;}
+.ctx-item:hover{background:var(--rose-light);}
+.ctx-item:active{background:var(--rose-mid);}
+.ctx-icon{font-size:1.1rem;flex-shrink:0;}
+.ctx-danger{color:#e05070;}
+.ctx-danger:hover{background:#fff0f2;}
+
+/* ── PIN BANNER ── */
+#pinBanner{display:none;align-items:center;gap:10px;padding:8px 14px;background:var(--rose-light);border-bottom:1px solid var(--border);cursor:pointer;flex-shrink:0;}
+#pinBanner.on{display:flex;}
+.pin-icon{font-size:1rem;flex-shrink:0;}
+.pin-txt{flex:1;font-size:.82rem;color:var(--text-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pin-close{background:none;border:none;font-size:.9rem;cursor:pointer;opacity:.5;flex-shrink:0;}
+
+/* ── BIRTHDAY BANNER ── */
+#bdayBanner{display:none;align-items:center;gap:10px;padding:10px 16px;background:linear-gradient(135deg,#ffecd2,#fcb69f);border-bottom:1px solid rgba(255,150,80,.3);flex-shrink:0;animation:slideUp .4s ease-out;}
+#bdayBanner.on{display:flex;}
+.bday-dismiss{margin-left:auto;background:none;border:none;font-size:1rem;cursor:pointer;opacity:.7;}
+
+/* ── BIRTHDAY in settings ── */
+.bday-input-row{display:flex;gap:8px;align-items:center;}
+.bday-input-row .inp{margin:0;flex:1;}
+
+/* ── SEARCH BAR ── */
+#searchBar{display:none;align-items:center;gap:8px;padding:8px 12px;background:var(--hdr);border-bottom:1px solid var(--border);flex-shrink:0;}
+#searchBar.on{display:flex;}
+#searchInpMsg{flex:1;padding:9px 14px;border:1.5px solid var(--border);border-radius:50px;font-size:.9rem;background:var(--input-bg);outline:none;color:var(--text);transition:border-color .2s;}
+#searchInpMsg:focus{border-color:var(--rose);}
+.search-close{background:none;border:none;font-size:1rem;cursor:pointer;opacity:.6;flex-shrink:0;padding:4px;}
+.search-count{font-size:.75rem;color:var(--text-soft);white-space:nowrap;flex-shrink:0;}
+.search-nav{display:flex;gap:4px;}
+.search-nav button{background:var(--input-bg);border:1px solid var(--border);border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:.8rem;display:flex;align-items:center;justify-content:center;}
+.search-nav button:hover{background:var(--rose-mid);}
+.brow.search-match .bubble{outline:2px solid var(--rose-deep);outline-offset:2px;border-radius:22px;}
+.brow.search-current .bubble{background:var(--rose-mid)!important;color:var(--text)!important;outline:2px solid var(--rose-deep);outline-offset:2px;}
+
+/* ── MUSIC CARD ── */
+.music-card{display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(0,0,0,.08);border-radius:14px;margin-top:6px;text-decoration:none;color:inherit;cursor:pointer;transition:opacity .15s;}
+.brow.mine .music-card{background:rgba(255,255,255,.15);}
+.music-card:hover{opacity:.85;}
+.music-thumb{width:44px;height:44px;border-radius:8px;object-fit:cover;flex-shrink:0;background:var(--rose-mid);}
+.music-thumb-placeholder{width:44px;height:44px;border-radius:8px;background:var(--rose-mid);display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0;}
+.music-info{flex:1;min-width:0;}
+.music-title{font-weight:600;font-size:.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.music-artist{font-size:.76rem;opacity:.7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px;}
+.music-source{font-size:.68rem;opacity:.55;margin-top:1px;}
+.music-play-icon{font-size:1.2rem;flex-shrink:0;}
+
+/* ── MUSIC MODAL ── */
+#musicModal .modal{max-width:380px;}
+#musicUrlInp{font-size:.9rem;}
+.music-preview{background:var(--input-bg);border:1px solid var(--border);border-radius:14px;padding:12px;margin-bottom:12px;display:none;align-items:center;gap:10px;}
+.music-preview.on{display:flex;}
+
+/* ── READ RECEIPT ── */
+.read-tick{font-size:.7rem;margin-left:3px;}
+.read-tick.seen{color:#60d080;}
+.brow.mine .read-tick.seen{color:rgba(255,255,255,.9);}
+.read-time{font-size:.6rem;opacity:.55;margin-left:2px;}
+
+/* ── DND banner ── */
+#dndBanner{position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:900;background:var(--text);color:var(--cream);padding:8px 20px;border-radius:0 0 16px 16px;font-size:.8rem;display:none;align-items:center;gap:8px;box-shadow:0 4px 16px rgba(0,0,0,.2);}
+#dndBanner.on{display:flex;}
+.dnd-off-btn{background:none;border:1px solid rgba(255,255,255,.3);border-radius:20px;color:white;font-size:.72rem;padding:3px 10px;cursor:pointer;}
+
+/* ── TRANSCRIPTION ── */
+.transcription{font-size:.78rem;color:var(--text-soft);font-style:italic;margin-top:5px;padding-top:5px;border-top:1px solid var(--border);display:none;}
+.brow.mine .transcription{color:rgba(255,255,255,.7);border-color:rgba(255,255,255,.2);}
+.transcription.on{display:block;}
+.transcribe-btn{background:none;border:none;font-size:.72rem;cursor:pointer;opacity:.55;padding:0;color:inherit;}
+.transcribe-btn:hover{opacity:1;}
+
+/* ── PWA install prompt ── */
+#pwaPrompt{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--card);border:1.5px solid var(--border);border-radius:20px;padding:14px 18px;display:none;align-items:center;gap:12px;box-shadow:0 8px 32px var(--shadow);z-index:500;max-width:320px;width:90%;animation:slideUp .4s ease-out;}
+#pwaPrompt.on{display:flex;}
+.pwa-icon{font-size:2rem;flex-shrink:0;}
+.pwa-info{flex:1;min-width:0;}
+.pwa-title{font-weight:600;font-size:.9rem;}
+.pwa-desc{font-size:.76rem;color:var(--text-soft);margin-top:2px;}
+.pwa-btns{display:flex;gap:6px;margin-top:8px;}
+.pwa-install{padding:7px 14px;background:linear-gradient(135deg,var(--rose),var(--rose-deep));border:none;border-radius:50px;color:white;font-size:.8rem;cursor:pointer;font-weight:600;}
+.pwa-dismiss{padding:7px 12px;background:var(--input-bg);border:1px solid var(--border);border-radius:50px;color:var(--text-soft);font-size:.8rem;cursor:pointer;}
 </style>
 </head>
 <body>
@@ -308,15 +446,35 @@ body{height:100vh;overflow:hidden;color:var(--text);background:var(--cream);-web
         <div class="my-name" id="myName">NosMessages</div>
         <div class="my-tag"  id="myTag">@…</div>
       </div>
-      <button class="icon-btn" id="addBtn"      title="Ajouter">➕</button>
+      <button class="icon-btn" id="addBtn"      title="Ajouter un contact">➕</button>
       <button class="icon-btn" id="settingsBtn" title="Paramètres">⚙️</button>
     </div>
     <div class="srch"><span class="srch-ico">🔍</span><input id="srchInp" class="srch-inp" type="text" placeholder="Rechercher…"/></div>
+    <div class="tabs">
+      <button class="tab-btn active" id="tabContacts">💬 Contacts</button>
+      <button class="tab-btn" id="tabRequests">🔔 Demandes<span class="tab-badge" id="reqBadge">0</span></button>
+    </div>
   </div>
-  <div class="clist" id="clist">
+
+  <!-- Contacts list -->
+  <div id="panelContacts" class="clist">
     <div class="empty-c" id="emptyC">
       <div style="font-size:3rem;animation:pulse 2.2s infinite">💌</div>
       <p>Aucun contact encore…<br>Ajoute quelqu'un avec ➕</p>
+    </div>
+  </div>
+
+  <!-- Requests panel -->
+  <div id="panelRequests" style="display:none;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;">
+    <!-- Received requests -->
+    <div style="padding:12px 16px 4px;font-size:.72rem;color:var(--text-soft);text-transform:uppercase;letter-spacing:.8px;font-weight:500;">Reçues</div>
+    <div id="reqReceived">
+      <div class="empty-req" id="emptyReceived"><div style="font-size:2rem">📭</div><p>Aucune demande reçue</p></div>
+    </div>
+    <!-- Sent requests -->
+    <div style="padding:12px 16px 4px;font-size:.72rem;color:var(--text-soft);text-transform:uppercase;letter-spacing:.8px;font-weight:500;">Envoyées</div>
+    <div id="reqSent">
+      <div class="empty-req" id="emptySent"><div style="font-size:2rem">📤</div><p>Aucune demande envoyée</p></div>
     </div>
   </div>
 </div>
@@ -414,24 +572,6 @@ body{height:100vh;overflow:hidden;color:var(--text);background:var(--cream);-web
       </div>
     </div>
     <div class="ssec">
-      <h3>Chat &amp; personnalisation</h3>
-      <div class="srow" style="flex-direction:column;align-items:stretch;gap:8px;">
-        <div style="display:flex;align-items:center;gap:10px;">
-          <span class="sicon">🎨</span>
-          <div class="sinfo"><div class="slabel">Fond de chat</div><div class="sdesc">Personnalise l'arrière-plan</div></div>
-          <button class="toggle" id="bgEnabledToggle"></button>
-        </div>
-        <div class="bg-picker-grid" id="bgPickerGrid" style="display:none">
-          <div class="bg-chip active" data-bg="none"><span>⬜</span></div>
-          <div class="bg-chip" data-bg="petals"  style="background:radial-gradient(ellipse at 20% 30%,#fce8ef,transparent 60%),radial-gradient(ellipse at 80% 70%,#fde0ea,transparent 60%),#fef9f0"><span>🌸</span></div>
-          <div class="bg-chip" data-bg="stars"   style="background:linear-gradient(135deg,#1a0f2e,#2d1b4e)"><span>✨</span></div>
-          <div class="bg-chip" data-bg="sunset"  style="background:linear-gradient(135deg,#ff9a9e,#fad0c4,#ffecd2)"><span>🌅</span></div>
-          <div class="bg-chip" data-bg="mint"    style="background:linear-gradient(135deg,#d4fc79,#96e6a1)"><span>🌿</span></div>
-          <div class="bg-chip" data-bg="ocean"   style="background:linear-gradient(135deg,#a1c4fd,#c2e9fb)"><span>🌊</span></div>
-        </div>
-      </div>
-    </div>
-    <div class="ssec">
       <h3>Notifications &amp; effets</h3>
       <div class="srow">
         <span class="sicon">🔔</span>
@@ -439,9 +579,30 @@ body{height:100vh;overflow:hidden;color:var(--text);background:var(--cream);-web
         <button class="toggle" id="notifToggle"></button>
       </div>
       <div class="srow">
+        <span class="sicon">📵</span>
+        <div class="sinfo"><div class="slabel">Ne pas déranger</div><div class="sdesc">Silence toutes les notifications</div></div>
+        <button class="toggle" id="dndToggle"></button>
+      </div>
+      <div class="srow">
+        <span class="sicon">👁️</span>
+        <div class="sinfo"><div class="slabel">Accusés de lecture</div><div class="sdesc">Envoyer "Vu" quand tu lis un message</div></div>
+        <button class="toggle on" id="readReceiptToggle"></button>
+      </div>
+      <div class="srow">
         <span class="sicon">🌸</span>
         <div class="sinfo"><div class="slabel">Pétales animées</div><div class="sdesc">Désactiver pour économiser la batterie</div></div>
         <button class="toggle on" id="petalsToggle"></button>
+      </div>
+    </div>
+    <div class="ssec">
+      <h3>🎂 Anniversaires</h3>
+      <div class="srow" style="flex-direction:column;align-items:stretch;gap:8px;">
+        <div class="slabel">Mon anniversaire</div>
+        <div class="bday-input-row">
+          <input id="bdayInput" class="inp" type="date" style="margin:0" placeholder="Date de naissance"/>
+          <button class="btn-main" id="saveBdayBtn" style="width:auto;padding:10px 18px;font-size:.88rem;">Enregistrer</button>
+        </div>
+        <div class="sdesc" style="padding-left:2px">Tes contacts verront 🎂 le jour J ♡</div>
       </div>
     </div>
     <div class="ssec">
@@ -473,8 +634,41 @@ body{height:100vh;overflow:hidden;color:var(--text);background:var(--cream);-web
       <div class="chat-hdr-name"   id="chatName">…</div>
       <div class="chat-hdr-status" id="chatStatus"></div>
     </div>
-    <button class="icon-btn" id="locShareBtn" title="Partager ma position">📍</button>
-    <button class="icon-btn" id="chatBgBtn"   title="Fond de chat">🎨</button>
+    <button class="icon-btn" id="searchMsgBtn" title="Rechercher">🔍</button>
+    <button class="icon-btn" id="locShareBtn"  title="Partager ma position">📍</button>
+    <button class="icon-btn" id="chatBgBtn"    title="Fond de chat">🎨</button>
+  </div>
+  <!-- Search bar -->
+  <div id="searchBar">
+    <input id="searchInpMsg" type="text" placeholder="Rechercher dans les messages…" autocomplete="off"/>
+    <div class="search-count" id="searchCount"></div>
+    <div class="search-nav">
+      <button id="searchPrev" title="Précédent">↑</button>
+      <button id="searchNext" title="Suivant">↓</button>
+    </div>
+    <button class="search-close" id="searchClose">✕</button>
+  </div>
+  <!-- Pin banner -->
+  <div id="pinBanner">
+    <span class="pin-icon">📌</span>
+    <span class="pin-txt" id="pinTxt">Message épinglé</span>
+    <button class="pin-close" id="pinClose">✕</button>
+  </div>
+  <!-- Reply bar -->
+  <div class="reply-bar" id="replyBar">
+    <div class="reply-preview">
+      <div class="rp-name" id="replyName"></div>
+      <div class="rp-txt"  id="replyTxt"></div>
+    </div>
+    <button class="reply-close" id="replyClose">✕</button>
+  </div>
+  <!-- Edit bar -->
+  <div class="edit-bar" id="editBar">
+    <div class="edit-info">
+      <div class="ei-label">✏️ Modifier le message</div>
+      <div class="ei-txt" id="editPreviewTxt"></div>
+    </div>
+    <button class="edit-close" id="editClose">✕</button>
   </div>
   <div class="zone" id="zone">
     <div class="empty-chat" id="emptyChat">
@@ -491,6 +685,7 @@ body{height:100vh;overflow:hidden;color:var(--text);background:var(--cream);-web
     <div class="irow">
       <label class="attach-btn" for="imgInput" title="Envoyer une image">📎</label>
       <input type="file" id="imgInput" accept="image/*" style="display:none"/>
+      <button class="attach-btn" id="musicBtn" title="Partager une musique">🎵</button>
       <div class="iwrap">
         <textarea id="msgInput" rows="1" placeholder="Écris quelque chose de doux…" maxlength="1000" enterkeyhint="send"></textarea>
       </div>
@@ -500,6 +695,27 @@ body{height:100vh;overflow:hidden;color:var(--text);background:var(--cream);-web
   </div>
 </div>
 
+<!-- MUSIC SHARE MODAL -->
+<div class="overlay off" id="musicModal">
+  <div class="modal">
+    <h3>🎵 Partager une musique</h3>
+    <p class="modal-sub">Colle un lien Spotify, YouTube ou Apple Music</p>
+    <input id="musicUrlInp" class="inp" type="url" placeholder="https://open.spotify.com/…" autocomplete="off"/>
+    <div class="err" id="musicErr"></div>
+    <div class="music-preview" id="musicPreview">
+      <div class="music-thumb-placeholder" id="musicPreviewThumb">🎵</div>
+      <div class="music-info">
+        <div class="music-title"  id="musicPreviewTitle">Titre</div>
+        <div class="music-artist" id="musicPreviewArtist">Artiste</div>
+        <div class="music-source" id="musicPreviewSource"></div>
+      </div>
+    </div>
+    <div class="modal-row">
+      <button class="btn-cancel" id="musicCancelBtn">Annuler</button>
+      <button class="btn-add"    id="musicSendBtn">🎵 Envoyer</button>
+    </div>
+  </div>
+</div>
 <!-- DELETE ACCOUNT MODAL -->
 <div class="overlay off" id="deleteModal">
   <div class="modal" style="text-align:center">
@@ -530,6 +746,27 @@ body{height:100vh;overflow:hidden;color:var(--text);background:var(--cream);-web
 <div id="rpop"></div>
 <button id="scrollBtn">↓</button>
 <div id="toast"></div>
+<div id="dndBanner">📵 Mode silencieux activé<button class="dnd-off-btn" id="dndOffBtn">Désactiver</button></div>
+<div id="pwaPrompt">
+  <div class="pwa-icon">💕</div>
+  <div class="pwa-info">
+    <div class="pwa-title">Installer NosMessages</div>
+    <div class="pwa-desc">Accès rapide depuis ton écran d'accueil ♡</div>
+    <div class="pwa-btns">
+      <button class="pwa-install" id="pwaInstallBtn">📲 Installer</button>
+      <button class="pwa-dismiss" id="pwaDismissBtn">Plus tard</button>
+    </div>
+  </div>
+</div>
+<div id="ctxMenu"></div>
+<div id="bdayBanner">
+  <span style="font-size:1.5rem">🎂</span>
+  <div style="flex:1;min-width:0">
+    <div style="font-weight:600;font-size:.9rem" id="bdayName">Joyeux anniversaire !</div>
+    <div style="font-size:.78rem;opacity:.8" id="bdayMsg"></div>
+  </div>
+  <button class="bday-dismiss" id="bdayDismiss">✕</button>
+</div>
 
 <script type="module">
 import { initializeApp }    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -773,7 +1010,10 @@ $("settingsBtn").onclick=()=>{
   $("myTagDisplay").textContent="@"+(me.tag||"…");
   $("myEmailDisplay").textContent=me.email||"";
   $("darkToggle").classList.toggle("on",darkMode);
+  $("dndToggle")?.classList.toggle("on",dndMode);
+  $("readReceiptToggle")?.classList.toggle("on",readReceiptsEnabled);
   document.querySelectorAll("#settingsAvRow .av-btn").forEach(b=>b.classList.toggle("sel",b.dataset.av===me.avatar));
+  if(me.birthday) $("bdayInput").value=me.birthday;
 };
 $("settingsBack").onclick=()=>$("settingsPanel").classList.remove("on");
 $("myAv").onclick=()=>$("settingsBtn").click();
@@ -917,26 +1157,50 @@ $("copyTagRow").onclick=()=>{
   navigator.clipboard?.writeText("@"+tag).then(()=>showToast("Identifiant copié ! 🏷️")).catch(()=>showToast("@"+tag));
 };
 
+/* ══════════════ TABS ══════════════ */
+$("tabContacts").onclick = () => switchTab("contacts");
+$("tabRequests").onclick = () => switchTab("requests");
+function switchTab(tab){
+  const isC = tab==="contacts";
+  $("tabContacts").classList.toggle("active",isC);
+  $("tabRequests").classList.toggle("active",!isC);
+  $("panelContacts").style.display = isC ? "block" : "none";
+  $("panelRequests").style.display = isC ? "none"  : "flex";
+  $("panelRequests").style.flexDirection = "column";
+}
+
 /* ══════════════ CONTACTS ══════════════ */
 function startContactsListener(){
   if(contactsUnsub){contactsUnsub();contactsUnsub=null;}
+  // Listen to accepted contacts
   contactsUnsub=onValue(ref(db,`contacts/${me.uid}`),async snap=>{
     contactsData={};
     if(!snap.exists()){renderContacts();return;}
-    await Promise.all(Object.keys(snap.val()).map(async uid=>{
+    // Only show accepted contacts (status === "accepted")
+    const accepted = Object.entries(snap.val()).filter(([,v])=>v.status==="accepted");
+    await Promise.all(accepted.map(async ([uid])=>{
       const s=await get(ref(db,`users/${uid}`)); if(s.exists()) contactsData[uid]=s.val();
     }));
     renderContacts();
+    checkBirthdays();
   });
+  // Listen to friend requests
+  onValue(ref(db,`friendRequests/${me.uid}/received`), snap => renderReceived(snap));
+  onValue(ref(db,`friendRequests/${me.uid}/sent`),     snap => renderSent(snap));
 }
+
 function renderContacts(filter=""){
-  const list=$("clist");
+  const list=$("panelContacts");
   let entries=Object.values(contactsData);
   if(filter) entries=entries.filter(c=>c.name.toLowerCase().includes(filter.toLowerCase())||(c.tag&&c.tag.includes(filter.toLowerCase())));
   list.innerHTML="";
   if(!entries.length){list.appendChild($("emptyC"));$("emptyC").style.display="flex";return;}
   $("emptyC").style.display="none";
   entries.forEach(c=>{
+    // Wrapper for swipe-to-delete
+    const wrap=document.createElement("div"); wrap.className="c-item-wrap";
+    const delBtn=document.createElement("div"); delBtn.className="c-delete-reveal"; delBtn.textContent="🗑️";
+    delBtn.onclick=e=>{e.stopPropagation();removeContact(c);};
     const item=document.createElement("div"); item.className="c-item";
     item.innerHTML=`
       <div class="c-av">${avHtml(c.photoURL,c.avatar)}<div class="online-dot" id="dot-${c.uid}"></div></div>
@@ -946,7 +1210,18 @@ function renderContacts(filter=""){
       </div>
       <div class="c-time" id="time-${c.uid}"></div>`;
     item.onclick=()=>openChat(c);
-    list.appendChild(item);
+    // Swipe to reveal delete
+    let startX=0, swiped=false;
+    item.addEventListener("touchstart",e=>{startX=e.touches[0].clientX;},{passive:true});
+    item.addEventListener("touchend",e=>{
+      const dx=startX-e.changedTouches[0].clientX;
+      if(dx>50){wrap.classList.add("swiped");swiped=true;}
+      else if(dx<-20){wrap.classList.remove("swiped");swiped=false;}
+    },{passive:true});
+    // Click elsewhere closes swipe
+    document.addEventListener("touchstart",()=>{if(swiped){wrap.classList.remove("swiped");swiped=false;}},{passive:true,once:false});
+    wrap.appendChild(item); wrap.appendChild(delBtn);
+    list.appendChild(wrap);
     onValue(ref(db,`presence/${c.uid}`),s=>{
       const d=$(`dot-${c.uid}`); if(d) d.style.display=s.exists()&&s.val().online?"block":"none";
     });
@@ -955,12 +1230,107 @@ function renderContacts(filter=""){
       if(!s.exists()) return;
       const m=Object.values(s.val())[0];
       const le=$(`last-${c.uid}`),te=$(`time-${c.uid}`);
-      if(le) le.textContent=" · "+(m.sender===me.uid?"Toi: ":"")+(m.image?"📷 Photo":(m.text||"").slice(0,28)+((m.text||"").length>28?"…":""));
+      if(le) le.textContent=" · "+(m.sender===me.uid?"Toi: ":"")+(m.music?"🎵 "+m.music.title:m.audio?"🎙️ Vocal":m.image?"📷 Photo":(m.text||"").slice(0,28)+((m.text||"").length>28?"…":""));
       if(te&&m.ts) te.textContent=fmtDateShort(m.ts);
     });
   });
 }
 $("srchInp").oninput=e=>renderContacts(e.target.value);
+
+async function removeContact(c){
+  if(!confirm(`Supprimer ${c.name} de tes contacts ?`)) return;
+  await Promise.all([
+    remove(ref(db,`contacts/${me.uid}/${c.uid}`)),
+    remove(ref(db,`contacts/${c.uid}/${me.uid}`)),
+  ]);
+  showToast(`${c.name} retiré(e) 👋`);
+}
+
+/* ── FRIEND REQUESTS ── */
+async function renderReceived(snap){
+  const box=$("reqReceived"); box.innerHTML="";
+  if(!snap.exists()||!Object.keys(snap.val()).length){
+    box.innerHTML='<div class="empty-req" id="emptyReceived"><div style="font-size:2rem">📭</div><p>Aucune demande reçue</p></div>';
+    updateReqBadge(0); return;
+  }
+  const entries=Object.entries(snap.val());
+  updateReqBadge(entries.length);
+  for(const [uid, req] of entries){
+    const uSnap=await get(ref(db,`users/${uid}`));
+    if(!uSnap.exists()) continue;
+    const u=uSnap.val();
+    const item=document.createElement("div"); item.className="req-item";
+    item.innerHTML=`
+      <div class="c-av" style="width:44px;height:44px;font-size:1.2rem">${avHtml(u.photoURL,u.avatar)}</div>
+      <div class="c-info">
+        <div class="c-name">${esc(u.name)}</div>
+        <div class="c-sub" style="color:var(--rose-deep);font-size:.7rem">@${esc(u.tag||uid.slice(0,8))}</div>
+      </div>
+      <div class="req-actions">
+        <button class="req-accept" data-uid="${uid}">✓</button>
+        <button class="req-decline" data-uid="${uid}">✕</button>
+      </div>`;
+    item.querySelector(".req-accept").onclick=()=>acceptRequest(uid, u);
+    item.querySelector(".req-decline").onclick=()=>declineRequest(uid, u);
+    box.appendChild(item);
+  }
+}
+
+async function renderSent(snap){
+  const box=$("reqSent"); box.innerHTML="";
+  if(!snap.exists()||!Object.keys(snap.val()).length){
+    box.innerHTML='<div class="empty-req" id="emptySent"><div style="font-size:2rem">📤</div><p>Aucune demande envoyée</p></div>';
+    return;
+  }
+  for(const [uid] of Object.entries(snap.val())){
+    const uSnap=await get(ref(db,`users/${uid}`));
+    if(!uSnap.exists()) continue;
+    const u=uSnap.val();
+    const item=document.createElement("div"); item.className="req-item";
+    item.innerHTML=`
+      <div class="c-av" style="width:44px;height:44px;font-size:1.2rem">${avHtml(u.photoURL,u.avatar)}</div>
+      <div class="c-info">
+        <div class="c-name">${esc(u.name)}</div>
+        <div class="c-sub" style="color:var(--rose-deep);font-size:.7rem">@${esc(u.tag||uid.slice(0,8))}</div>
+      </div>
+      <span class="req-sent-badge">En attente…</span>
+      <button class="req-decline" style="margin-left:4px" data-uid="${uid}" title="Annuler">✕</button>`;
+    item.querySelector(".req-decline").onclick=()=>cancelRequest(uid, u);
+    box.appendChild(item);
+  }
+}
+
+function updateReqBadge(n){
+  const b=$("reqBadge"); b.textContent=n; b.classList.toggle("on",n>0);
+}
+
+async function acceptRequest(uid, u){
+  // Mark both as accepted contacts
+  await Promise.all([
+    set(ref(db,`contacts/${me.uid}/${uid}`),{status:"accepted",since:serverTimestamp()}),
+    set(ref(db,`contacts/${uid}/${me.uid}`),{status:"accepted",since:serverTimestamp()}),
+    remove(ref(db,`friendRequests/${me.uid}/received/${uid}`)),
+    remove(ref(db,`friendRequests/${uid}/sent/${me.uid}`)),
+  ]);
+  showToast(`${u.name} accepté(e) ! 💕`);
+  switchTab("contacts");
+}
+
+async function declineRequest(uid, u){
+  await Promise.all([
+    remove(ref(db,`friendRequests/${me.uid}/received/${uid}`)),
+    remove(ref(db,`friendRequests/${uid}/sent/${me.uid}`)),
+  ]);
+  showToast(`Demande refusée`);
+}
+
+async function cancelRequest(uid, u){
+  await Promise.all([
+    remove(ref(db,`friendRequests/${me.uid}/sent/${uid}`)),
+    remove(ref(db,`friendRequests/${uid}/received/${me.uid}`)),
+  ]);
+  showToast(`Demande annulée`);
+}
 
 /* ══════════════ ADD CONTACT ══════════════ */
 $("addBtn").onclick=()=>{
@@ -987,15 +1357,27 @@ $("modalAction").onclick=async()=>{
     }
     if(!uid){setErr("addErr","Aucun utilisateur trouvé 😕");$("modalAction").textContent="🔍 Rechercher";$("modalAction").disabled=false;return;}
     if(uid===me.uid){setErr("addErr","C'est toi 😅");$("modalAction").textContent="🔍 Rechercher";$("modalAction").disabled=false;return;}
+    // Check if already contact
+    const existSnap=await get(ref(db,`contacts/${me.uid}/${uid}`));
+    if(existSnap.exists()&&existSnap.val().status==="accepted"){setErr("addErr","Déjà dans tes contacts 😊");$("modalAction").textContent="🔍 Rechercher";$("modalAction").disabled=false;return;}
+    // Check if request already sent
+    const sentSnap=await get(ref(db,`friendRequests/${me.uid}/sent/${uid}`));
+    if(sentSnap.exists()){setErr("addErr","Demande déjà envoyée ⏳");$("modalAction").textContent="🔍 Rechercher";$("modalAction").disabled=false;return;}
     const u=(await get(ref(db,`users/${uid}`))).val();
     foundUser=u; makeAv($("foundAv"),u.photoURL,u.avatar);
     $("foundName").textContent=u.name; $("foundTag").textContent="@"+(u.tag||u.uid.slice(0,8));
-    $("userFound").style.display="block"; $("modalAction").textContent="➕ Ajouter"; $("modalAction").disabled=false;
+    $("userFound").style.display="block"; $("modalAction").textContent="📨 Envoyer la demande"; $("modalAction").disabled=false;
   }catch(e){setErr("addErr","Erreur de recherche 😕");$("modalAction").textContent="🔍 Rechercher";$("modalAction").disabled=false;}
 };
 async function doAdd(u){
-  await Promise.all([set(ref(db,`contacts/${me.uid}/${u.uid}`),{since:serverTimestamp()}),set(ref(db,`contacts/${u.uid}/${me.uid}`),{since:serverTimestamp()})]);
-  $("addModal").classList.add("off"); foundUser=null; showToast(`${u.name} ajouté(e) ! 💕`);
+  // Send friend request instead of directly adding
+  await Promise.all([
+    set(ref(db,`friendRequests/${me.uid}/sent/${u.uid}`),{since:serverTimestamp(),name:u.name}),
+    set(ref(db,`friendRequests/${u.uid}/received/${me.uid}`),{since:serverTimestamp(),name:me.name}),
+  ]);
+  $("addModal").classList.add("off"); foundUser=null;
+  showToast(`Demande envoyée à ${u.name} ! 📨`);
+  switchTab("requests");
 }
 
 /* ══════════════ CHAT ══════════════ */
@@ -1019,13 +1401,19 @@ function openChat(contact){
   chatUnsubs.push(onChildAdded(ref(db,`chats/${cid}/messages`),s=>{
     if(shownMsgs.has(s.key))return; shownMsgs.add(s.key);
     addBubble({...s.val(),_key:s.key});
-    if(s.val().sender!==me.uid) set(ref(db,`chats/${cid}/read/${me.uid}`),{ts:serverTimestamp()});
+    if(s.val().sender!==me.uid) markRead(cid);
   }));
   chatUnsubs.push(onValue(ref(db,`chats/${cid}/typing/${contact.uid}`),s=>{
     $("tName").textContent=contact.name+" écrit…";
     $("typingEl").classList.toggle("on",s.exists());
     if(s.exists()&&atBottom) $("zone").scrollTop=$("zone").scrollHeight;
   }));
+  chatUnsubs.push(loadPin(cid));
+  chatUnsubs.push(listenReadReceipts(cid, contact.uid));
+  // Reset bars
+  $("replyBar").classList.remove("on"); replyTo=null;
+  $("editBar").classList.remove("on"); editingKey=null;
+  $("pinBanner").classList.remove("on");
 }
 $("backBtn").onclick=()=>{
   chatUnsubs.forEach(u=>u()); chatUnsubs=[]; currentChat=null;
@@ -1058,33 +1446,44 @@ function addBubble(msg){
     </div>
     ${msg.location.staticMap?`<img src="${msg.location.staticMap}" class="loc-map-thumb" alt="carte"/>`:""}
   `:"";
+  const replyHtml = msg.replyTo ? `
+    <div class="reply-quote">
+      <div class="rq-name">${esc(msg.replyTo.sender)}</div>
+      <div class="rq-txt">${esc(msg.replyTo.text)}</div>
+    </div>` : "";
+  const editedTag = msg.edited ? `<span class="edited-tag">(modifié)</span>` : "";
+  row.dataset.key = msg._key;
   row.innerHTML=`
     <div class="bav">${avHtml(isMine?me.photoURL:currentChat?.photoURL, isMine?me.avatar:currentChat?.avatar)}</div>
     <div>
       <div class="bubble">
+        ${replyHtml}
         ${mediaHtml}
         ${locHtml}
         ${msg.audio?`<div class="audio-placeholder" data-src="${msg.audio}" data-dur="${msg.audioDur||0}"></div>`:""}
-        ${txt?`<div class="btext${isEmoji?" big":""}">${esc(txt)}</div>`:""}
-        <div class="btime">${timeStr}</div>
+        ${msg.music?`<div class="music-placeholder"></div>`:""}
+        ${txt?`<div class="btext${isEmoji?" big":""}">${esc(txt)}</div>${editedTag}`:""}
+        <div class="btime">${timeStr}${isMine?`<span class="read-tick" id="tick-${msg._key}">✓</span>`:""}${msg.audio&&!isMine?`<button class="transcribe-btn" data-key="${msg._key}" title="Transcrire">📝</button>`:""}</div>
       </div>
       <div class="breacts" id="br-${msg._key}"></div>
     </div>`;
   // Replace audio placeholder with real player
   const ph=row.querySelector(".audio-placeholder");
-  if(ph){ const ab=buildAudioBubble(ph.dataset.src, parseInt(ph.dataset.dur)||0); ph.replaceWith(ab); }
+  if(ph){ const ab=buildAudioBubble(ph.dataset.src, parseInt(ph.dataset.dur)||0); ph.replaceWith(ab); row.dataset.audioSrc=ph.dataset.src||msg.audio||""; }
+  const mph=row.querySelector(".music-placeholder");
+  if(mph && msg.music){ mph.replaceWith(buildMusicCard(msg.music, isMine)); }
   const bub=row.querySelector(".bubble");
   let pt,moved=false;
-  bub.addEventListener("touchstart",()=>{moved=false;pt=setTimeout(()=>{if(!moved)openRpop(null,null,msg._key);},500);},{passive:true});
+  bub.addEventListener("touchstart",e=>{moved=false;const tx=e.touches[0].clientX,ty=e.touches[0].clientY;pt=setTimeout(()=>{if(!moved)openCtxMenu(tx,ty,msg,isMine);},500);},{passive:true});
   bub.addEventListener("touchmove",()=>{moved=true;clearTimeout(pt);},{passive:true});
   bub.addEventListener("touchend",()=>clearTimeout(pt));
-  bub.addEventListener("contextmenu",e=>{e.preventDefault();openRpop(e.clientX,e.clientY,msg._key);});
+  bub.addEventListener("contextmenu",e=>{e.preventDefault();openCtxMenu(e.clientX,e.clientY,msg,isMine);});
   const img=row.querySelector(".bmedia");
   if(img) img.onclick=()=>{$("lightboxImg").src=img.src;$("lightbox").classList.add("on");};
   zone.appendChild(row);
   if(atBottom) zone.scrollTop=zone.scrollHeight; else $("scrollBtn").classList.add("on");
-  const notifBody=msg.audio?"🎙️ Message vocal":msg.location?"📍 Position":msg.image?"📷 Photo":txt;
-  if(!isMine&&Notification.permission==="granted"){
+  const notifBody=msg.music?"🎵 "+msg.music.title:msg.audio?"🎙️ Message vocal":msg.location?"📍 Position":msg.image?"📷 Photo":txt;
+  if(!isMine&&Notification.permission==="granted"&&!dndMode){
     try{new Notification(`💌 ${currentChat?.name}`,{body:notifBody});}catch(_){}
     spawnHeart(false);
   }
@@ -1106,17 +1505,32 @@ $("msgInput").oninput=()=>{
 function send(extra={}){
   if(!currentChat) return;
   const ta=$("msgInput"), txt=ta.value.trim();
-  if(!txt&&!extra.image&&!extra.audio&&!extra.location) return;
+  if(!txt&&!extra.image&&!extra.audio&&!extra.location&&!extra.music) return;
   const cid=getChatId(me.uid,currentChat.uid);
-  push(ref(db,`chats/${cid}/messages`),{text:txt,sender:me.uid,ts:serverTimestamp(),...extra}).catch(()=>showToast("Erreur d'envoi 😕"));
+
+  if(editingKey) {
+    // Edit existing message
+    update(ref(db,`chats/${cid}/messages/${editingKey}`),{text:txt,edited:true}).catch(()=>showToast("Erreur 😕"));
+    // Update DOM instantly
+    const el=document.querySelector(`[data-key="${editingKey}"] .btext`);
+    if(el){el.innerHTML=esc(txt);if(!el.nextElementSibling?.classList.contains("edited-tag")){const et=document.createElement("span");et.className="edited-tag";et.textContent="(modifié)";el.after(et);}}
+    $("editBar").classList.remove("on"); editingKey=null;
+  } else {
+    // New message
+    const msgData = {text:txt,sender:me.uid,ts:serverTimestamp(),...extra};
+    if(replyTo) msgData.replyTo = replyTo;
+    push(ref(db,`chats/${cid}/messages`),msgData).catch(()=>showToast("Erreur d'envoi 😕"));
+    $("replyBar").classList.remove("on"); replyTo=null;
+    // Heart explosion
+    const r=$("sendBtn").getBoundingClientRect();
+    explodeHearts(r.left+r.width/2, r.top+r.height/2, 10);
+    $("sendBtn").classList.add("sent-pulse");
+    setTimeout(()=>$("sendBtn").classList.remove("sent-pulse"),500);
+    spawnHeart(true);
+  }
   ta.value=""; ta.style.height="auto"; $("sendBtn").disabled=true;
   remove(ref(db,`chats/${cid}/typing/${me.uid}`)); clearTimeout(typingTimer);
-  // Heart explosion on send button
-  const r=$("sendBtn").getBoundingClientRect();
-  explodeHearts(r.left+r.width/2, r.top+r.height/2, 10);
-  $("sendBtn").classList.add("sent-pulse");
-  setTimeout(()=>$("sendBtn").classList.remove("sent-pulse"),500);
-  spawnHeart(true); ta.focus();
+  ta.focus();
 }
 $("imgInput").onchange=async e=>{
   const file=e.target.files[0]; if(!file||!currentChat) return;
@@ -1399,6 +1813,504 @@ function explodeHearts(x, y, count=8) {
     setTimeout(() => el.remove(), 1100);
   }
 }
+
+
+
+/* ══════════════════════════════════════════
+   STATE for new features
+══════════════════════════════════════════ */
+let replyTo = null;     // {key, sender, text}
+let editingKey = null;  // message key being edited
+let pinnedMsg = null;   // {key, text}
+
+/* ══════════════════════════════════════════
+   CONTEXT MENU (replaces long-press rpop)
+══════════════════════════════════════════ */
+function openCtxMenu(x, y, msg, isMine) {
+  const menu = $("ctxMenu");
+  menu.innerHTML = "";
+  const items = [
+    { icon:"↩️", label:"Répondre",  action:()=>startReply(msg) },
+    { icon:"📌", label:"Épingler",  action:()=>pinMessage(msg) },
+    { icon:"😊", label:"Réaction",  action:()=>{ closeCtx(); openRpop(x,y,msg._key); } },
+  ];
+  if(isMine && !msg.audio && !msg.image && !msg.location) {
+    items.push({ icon:"✏️", label:"Modifier", action:()=>startEdit(msg) });
+  }
+  // Build items
+  items.forEach(({icon,label,action,danger})=>{
+    const el=document.createElement("div");
+    el.className="ctx-item"+(danger?" ctx-danger":"");
+    el.innerHTML=`<span class="ctx-icon">${icon}</span>${label}`;
+    el.onclick=()=>{ closeCtx(); action(); };
+    menu.appendChild(el);
+  });
+  // Position
+  const mob = window.innerWidth <= 600;
+  if(mob) {
+    menu.style.left="50%"; menu.style.transform="translateX(-50%)";
+    menu.style.bottom="120px"; menu.style.top="auto";
+  } else {
+    const mx = Math.min(x, window.innerWidth-180);
+    const my = Math.max(y-160, 60);
+    menu.style.left=mx+"px"; menu.style.top=my+"px";
+    menu.style.bottom="auto"; menu.style.transform="";
+  }
+  menu.classList.add("on");
+  setTimeout(()=>document.addEventListener("click", closeCtx, {once:true}), 80);
+}
+function closeCtx() { $("ctxMenu").classList.remove("on"); }
+
+/* ══════════════════════════════════════════
+   REPLY
+══════════════════════════════════════════ */
+function startReply(msg) {
+  replyTo = { key:msg._key, sender:msg.sender===me.uid?"Toi":currentChat.name, text:msg.text||"📷 Photo" };
+  $("replyName").textContent = replyTo.sender;
+  $("replyTxt").textContent  = replyTo.text;
+  $("replyBar").classList.add("on");
+  $("editBar").classList.remove("on"); editingKey=null;
+  $("msgInput").focus();
+}
+$("replyClose").onclick = () => { $("replyBar").classList.remove("on"); replyTo=null; };
+
+/* ══════════════════════════════════════════
+   EDIT
+══════════════════════════════════════════ */
+function startEdit(msg) {
+  editingKey = msg._key;
+  $("editPreviewTxt").textContent = msg.text;
+  $("editBar").classList.add("on");
+  $("replyBar").classList.remove("on"); replyTo=null;
+  const ta=$("msgInput");
+  ta.value=msg.text; ta.style.height="auto"; ta.style.height=Math.min(ta.scrollHeight,120)+"px";
+  $("sendBtn").disabled=false;
+  ta.focus();
+}
+$("editClose").onclick = () => {
+  $("editBar").classList.remove("on"); editingKey=null;
+  $("msgInput").value=""; $("msgInput").style.height="auto"; $("sendBtn").disabled=true;
+};
+
+/* ══════════════════════════════════════════
+   PIN
+══════════════════════════════════════════ */
+function pinMessage(msg) {
+  if(!currentChat) return;
+  const cid=getChatId(me.uid,currentChat.uid);
+  const txt = msg.text||(msg.audio?"🎙️ Vocal":msg.image?"📷 Photo":"📍 Position");
+  set(ref(db,`chats/${cid}/pin`), {key:msg._key, text:txt, pinnedBy:me.uid, ts:serverTimestamp()});
+  showToast("Message épinglé 📌");
+}
+function loadPin(cid) {
+  return onValue(ref(db,`chats/${cid}/pin`), snap=>{
+    if(!snap.exists()) { $("pinBanner").classList.remove("on"); pinnedMsg=null; return; }
+    pinnedMsg=snap.val();
+    $("pinTxt").textContent = pinnedMsg.text;
+    $("pinBanner").classList.add("on");
+  });
+}
+$("pinClose").onclick = () => {
+  if(!currentChat) return;
+  const cid=getChatId(me.uid,currentChat.uid);
+  remove(ref(db,`chats/${cid}/pin`));
+};
+$("pinBanner").onclick = (e) => {
+  if(e.target===$("pinClose")||e.target.closest("#pinClose")) return;
+  // Scroll to pinned message
+  if(pinnedMsg?.key) {
+    const el = document.querySelector(`[data-key="${pinnedMsg.key}"]`);
+    if(el) el.scrollIntoView({behavior:"smooth",block:"center"});
+  }
+};
+
+/* ══════════════════════════════════════════
+   BIRTHDAY
+══════════════════════════════════════════ */
+$("saveBdayBtn").onclick = async () => {
+  const val = $("bdayInput").value;
+  if(!val) { showToast("Entre une date 😊"); return; }
+  await update(ref(db,`users/${me.uid}`), {birthday:val});
+  showToast("Anniversaire enregistré 🎂");
+};
+
+function checkBirthdays() {
+  if(!contactsData) return;
+  const today = new Date();
+  const todayStr = `${String(today.getMonth()+1).padStart(2,"0")}-${String(today.getDate()).padStart(2,"0")}`;
+  const dismissed = localStorage.getItem("nm_bday_dismissed");
+  if(dismissed === todayStr) return;
+  for(const c of Object.values(contactsData)) {
+    if(!c.birthday) continue;
+    const bday = c.birthday.slice(5); // MM-DD
+    if(bday === todayStr) {
+      const age = today.getFullYear() - parseInt(c.birthday.slice(0,4));
+      $("bdayName").textContent = `🎂 C'est l'anniversaire de ${c.name} !`;
+      $("bdayMsg").textContent  = `${age > 0 ? age+" ans aujourd'hui ♡" : "Souhaite-lui bonne fête ! 🎉"}`;
+      $("bdayBanner").classList.add("on");
+      break;
+    }
+  }
+}
+$("bdayDismiss").onclick = () => {
+  $("bdayBanner").classList.remove("on");
+  const today=new Date();
+  localStorage.setItem("nm_bday_dismissed", `${String(today.getMonth()+1).padStart(2,"0")}-${String(today.getDate()).padStart(2,"0")}`);
+};
+
+
+
+/* ══════════════════════════════════════════
+   SEARCH IN MESSAGES
+══════════════════════════════════════════ */
+let searchMatches = [], searchIdx = 0;
+
+$("searchMsgBtn").onclick = () => {
+  const bar = $("searchBar");
+  const isOn = bar.classList.toggle("on");
+  if(isOn) { setTimeout(()=>$("searchInpMsg").focus(), 80); }
+  else { clearSearch(); }
+};
+$("searchClose").onclick = () => {
+  $("searchBar").classList.remove("on");
+  clearSearch();
+};
+
+$("searchInpMsg").addEventListener("input", () => {
+  const q = $("searchInpMsg").value.trim().toLowerCase();
+  clearHighlights();
+  if(!q){ $("searchCount").textContent=""; searchMatches=[]; return; }
+  searchMatches = [];
+  document.querySelectorAll(".brow").forEach(row => {
+    const txt = row.querySelector(".btext")?.textContent?.toLowerCase()||"";
+    if(txt.includes(q)){
+      row.classList.add("search-match");
+      searchMatches.push(row);
+    }
+  });
+  searchIdx = searchMatches.length ? searchMatches.length-1 : -1;
+  updateSearchUI();
+  scrollToMatch();
+});
+
+$("searchInpMsg").addEventListener("keydown", e => {
+  if(e.key==="Enter"){ e.preventDefault(); nextMatch(e.shiftKey?-1:1); }
+});
+$("searchNext").onclick = () => nextMatch(1);
+$("searchPrev").onclick = () => nextMatch(-1);
+
+function nextMatch(dir){
+  if(!searchMatches.length) return;
+  searchMatches[searchIdx]?.classList.remove("search-current");
+  searchIdx = (searchIdx + dir + searchMatches.length) % searchMatches.length;
+  updateSearchUI(); scrollToMatch();
+}
+function updateSearchUI(){
+  if(!searchMatches.length){ $("searchCount").textContent="Aucun résultat"; return; }
+  $("searchCount").textContent=`${searchIdx+1}/${searchMatches.length}`;
+  searchMatches.forEach((r,i)=>r.classList.toggle("search-current",i===searchIdx));
+}
+function scrollToMatch(){
+  searchMatches[searchIdx]?.scrollIntoView({behavior:"smooth",block:"center"});
+}
+function clearHighlights(){
+  document.querySelectorAll(".search-match,.search-current").forEach(r=>r.classList.remove("search-match","search-current"));
+}
+function clearSearch(){
+  clearHighlights();
+  $("searchInpMsg").value="";
+  $("searchCount").textContent="";
+  searchMatches=[]; searchIdx=0;
+}
+
+/* ══════════════════════════════════════════
+   MUSIC SHARING
+══════════════════════════════════════════ */
+function detectMusicPlatform(url) {
+  try { const u=new URL(url);
+    if(u.hostname.includes("spotify.com"))  return "spotify";
+    if(u.hostname.includes("youtube.com")||u.hostname.includes("youtu.be")) return "youtube";
+    if(u.hostname.includes("music.apple.com")) return "apple";
+    if(u.hostname.includes("deezer.com"))   return "deezer";
+    if(u.hostname.includes("soundcloud.com")) return "soundcloud";
+  } catch(_){}
+  return null;
+}
+function platformIcon(p){ return {spotify:"🟢",youtube:"🔴",apple:"🎵",deezer:"🎶",soundcloud:"🟠"}[p]||"🎵"; }
+function platformName(p){ return {spotify:"Spotify",youtube:"YouTube",apple:"Apple Music",deezer:"Deezer",soundcloud:"SoundCloud"}[p]||"Musique"; }
+
+// Try to extract title from YouTube oEmbed (public API, no key needed)
+async function fetchYouTubeTitle(url) {
+  try {
+    const r = await fetch(`https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`);
+    if(!r.ok) return null;
+    const d = await r.json();
+    return { title: d.title, artist: d.author_name, thumb: d.thumbnail_url };
+  } catch(_){ return null; }
+}
+
+$("musicBtn").onclick = () => {
+  $("musicUrlInp").value=""; $("musicErr").textContent="";
+  $("musicPreview").classList.remove("on");
+  $("musicModal").classList.remove("off");
+  setTimeout(()=>$("musicUrlInp").focus(),80);
+};
+$("musicCancelBtn").onclick = () => $("musicModal").classList.add("off");
+$("musicModal").onclick = e=>{ if(e.target===$("musicModal")) $("musicModal").classList.add("off"); };
+
+// Live preview as user types
+$("musicUrlInp").addEventListener("input", async () => {
+  const url = $("musicUrlInp").value.trim();
+  const platform = detectMusicPlatform(url);
+  if(!platform){ $("musicPreview").classList.remove("on"); return; }
+  $("musicPreviewSource").textContent = platformIcon(platform)+" "+platformName(platform);
+  $("musicPreviewThumb").textContent  = platformIcon(platform);
+  $("musicPreviewTitle").textContent  = "Chargement…";
+  $("musicPreviewArtist").textContent = "";
+  $("musicPreview").classList.add("on");
+  // Fetch YouTube title if possible
+  if(platform==="youtube") {
+    const meta = await fetchYouTubeTitle(url);
+    if(meta) {
+      $("musicPreviewTitle").textContent  = meta.title||"Vidéo YouTube";
+      $("musicPreviewArtist").textContent = meta.artist||"";
+      if(meta.thumb) {
+        const img=document.createElement("img");
+        img.className="music-thumb"; img.src=meta.thumb; img.alt="";
+        $("musicPreviewThumb").replaceWith(img);
+      }
+    } else {
+      $("musicPreviewTitle").textContent="Lien YouTube";
+    }
+  } else {
+    $("musicPreviewTitle").textContent  = platformName(platform);
+    $("musicPreviewArtist").textContent = url.length>40?url.slice(0,40)+"…":url;
+  }
+});
+
+$("musicSendBtn").onclick = async () => {
+  const url = $("musicUrlInp").value.trim();
+  if(!url){ $("musicErr").textContent="Entre un lien 😊"; return; }
+  const platform = detectMusicPlatform(url);
+  if(!platform){ $("musicErr").textContent="Lien non reconnu (Spotify, YouTube, Apple Music…)"; return; }
+  // Build music data
+  const musicData = {
+    url, platform,
+    title:  $("musicPreviewTitle").textContent  || platformName(platform),
+    artist: $("musicPreviewArtist").textContent || "",
+    thumb:  document.querySelector("#musicPreview img")?.src || "",
+  };
+  send({ music: musicData, text:"" });
+  $("musicModal").classList.add("off");
+};
+
+function buildMusicCard(music, isMine) {
+  const icon = platformIcon(music.platform);
+  const name = platformName(music.platform);
+  const div = document.createElement("a");
+  div.className="music-card"; div.href=music.url; div.target="_blank"; div.rel="noopener noreferrer";
+  div.onclick=e=>e.stopPropagation();
+  if(music.thumb) {
+    div.innerHTML=`<img class="music-thumb" src="${music.thumb}" alt=""/>`;
+  } else {
+    div.innerHTML=`<div class="music-thumb-placeholder">${icon}</div>`;
+  }
+  div.innerHTML+=`
+    <div class="music-info">
+      <div class="music-title">${esc(music.title||name)}</div>
+      ${music.artist?`<div class="music-artist">${esc(music.artist)}</div>`:""}
+      <div class="music-source">${icon} ${name}</div>
+    </div>
+    <span class="music-play-icon">▶</span>`;
+  return div;
+}
+
+
+
+/* ══════════════════════════════════════════
+   PWA — installable app
+══════════════════════════════════════════ */
+// Inject manifest dynamically
+(function injectManifest(){
+  const manifest = {
+    name:"NosMessages.love",
+    short_name:"NosMessages",
+    description:"Messagerie romantique ♡",
+    start_url:"./",
+    display:"standalone",
+    background_color:"#fef9f0",
+    theme_color:"#e8a0b0",
+    icons:[
+      {src:"data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💕</text></svg>",sizes:"any",type:"image/svg+xml"}
+    ]
+  };
+  const blob = new Blob([JSON.stringify(manifest)],{type:"application/json"});
+  const url  = URL.createObjectURL(blob);
+  $("pwaManifest").href = url;
+})();
+
+let deferredInstallPrompt = null;
+window.addEventListener("beforeinstallprompt", e => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  // Show install prompt if not dismissed before
+  if(!localStorage.getItem("nm_pwa_dismissed")) {
+    setTimeout(() => $("pwaPrompt").classList.add("on"), 3000);
+  }
+});
+window.addEventListener("appinstalled", () => {
+  $("pwaPrompt").classList.remove("on");
+  showToast("Application installée ! 📲");
+});
+
+$("pwaInstallBtn")?.addEventListener("click", async () => {
+  if(!deferredInstallPrompt){ showToast("Utilise le menu de ton navigateur pour installer 📲"); return; }
+  deferredInstallPrompt.prompt();
+  const {outcome} = await deferredInstallPrompt.userChoice;
+  if(outcome==="accepted") showToast("Installation en cours… 💕");
+  deferredInstallPrompt = null;
+  $("pwaPrompt").classList.remove("on");
+});
+$("pwaDismissBtn")?.addEventListener("click", () => {
+  $("pwaPrompt").classList.remove("on");
+  localStorage.setItem("nm_pwa_dismissed","1");
+});
+
+/* ══════════════════════════════════════════
+   SERVICE WORKER (push notifications)
+══════════════════════════════════════════ */
+(function registerSW(){
+  if(!("serviceWorker" in navigator)) return;
+  // Inline SW as blob — handles push notifications
+  const swCode = `
+self.addEventListener('push', e => {
+  const data = e.data ? e.data.json() : {};
+  self.registration.showNotification(data.title||'💌 NosMessages', {
+    body: data.body||'Nouveau message',
+    icon: data.icon||'',
+    badge: data.badge||'',
+    data: { url: data.url||'/' }
+  });
+});
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  e.waitUntil(clients.openWindow(e.notification.data.url||'/'));
+});
+self.addEventListener('install', () => self.skipWaiting());
+self.addEventListener('activate', () => self.clients.claim());
+`;
+  const blob = new Blob([swCode],{type:"application/javascript"});
+  const swUrl = URL.createObjectURL(blob);
+  navigator.serviceWorker.register(swUrl).catch(()=>{});
+})();
+
+/* ══════════════════════════════════════════
+   DO NOT DISTURB
+══════════════════════════════════════════ */
+let dndMode = localStorage.getItem("nm_dnd")==="1";
+
+function applyDND(on) {
+  dndMode = on;
+  localStorage.setItem("nm_dnd", on?"1":"0");
+  $("dndToggle")?.classList.toggle("on", on);
+  $("dndBanner").classList.toggle("on", on);
+  if(on) showToast("Mode silencieux activé 📵");
+  else   showToast("Notifications réactivées 🔔");
+}
+// Init DND on load
+if(dndMode){ $("dndBanner").classList.add("on"); }
+
+$("dndToggle")?.addEventListener("click", () => applyDND(!dndMode));
+$("dndOffBtn")?.addEventListener("click", () => applyDND(false));
+
+/* ══════════════════════════════════════════
+   READ RECEIPTS — "vu" with exact time
+══════════════════════════════════════════ */
+let readReceiptsEnabled = localStorage.getItem("nm_read")!=="0";
+
+$("readReceiptToggle")?.addEventListener("click", () => {
+  readReceiptsEnabled = !readReceiptsEnabled;
+  $("readReceiptToggle").classList.toggle("on", readReceiptsEnabled);
+  localStorage.setItem("nm_read", readReceiptsEnabled?"1":"0");
+  showToast(readReceiptsEnabled?"Accusés de lecture activés 👁️":"Accusés désactivés");
+});
+if(!readReceiptsEnabled) $("readReceiptToggle")?.classList.remove("on");
+
+// Listen for read receipts on sent messages
+function listenReadReceipts(cid, contactUid) {
+  return onValue(ref(db,`chats/${cid}/read/${contactUid}`), snap => {
+    if(!snap.exists()) return;
+    const seenTs = snap.val().ts;
+    // Mark all mine messages as seen
+    document.querySelectorAll(".brow.mine .read-tick").forEach(tick => {
+      const msgTs = tick.closest(".brow")?.querySelector(".btime")?.dataset?.ts;
+      tick.classList.add("seen");
+      tick.textContent = "✓✓";
+      tick.title = "Lu " + (seenTs ? fmtTime(seenTs) : "");
+    });
+  });
+}
+
+// When receiving a message, mark as read and notify sender (if receipts enabled)
+function markRead(cid) {
+  if(!readReceiptsEnabled) return;
+  set(ref(db,`chats/${cid}/read/${me.uid}`), {ts:serverTimestamp()});
+}
+
+/* ══════════════════════════════════════════
+   VOICE TRANSCRIPTION (Web Speech API)
+══════════════════════════════════════════ */
+async function transcribeAudio(src, key) {
+  const btn = document.querySelector(`.transcribe-btn[data-key="${key}"]`);
+  if(!btn) return;
+  // Check Web Speech API
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SR) { showToast("Transcription non supportée sur ce navigateur 😕"); return; }
+
+  btn.textContent="⏳"; btn.disabled=true;
+
+  // Play the audio and recognize simultaneously
+  const audio = new Audio(src);
+  const recognition = new SR();
+  recognition.lang = "fr-FR";
+  recognition.continuous = true;
+  recognition.interimResults = false;
+
+  let transcript = "";
+  recognition.onresult = e => {
+    for(let i=e.resultIndex;i<e.results.length;i++){
+      if(e.results[i].isFinal) transcript+=e.results[i][0].transcript+" ";
+    }
+  };
+  recognition.onerror = () => {
+    btn.textContent="📝"; btn.disabled=false;
+    showToast("Transcription échouée 😕");
+  };
+  recognition.onend = () => {
+    btn.textContent="📝"; btn.disabled=false;
+    const row = document.querySelector(`[data-key="${key}"]`);
+    if(!row) return;
+    let tEl = row.querySelector(".transcription");
+    if(!tEl){ tEl=document.createElement("div"); tEl.className="transcription"; row.querySelector(".bubble").appendChild(tEl); }
+    tEl.textContent = transcript.trim()||"(aucun texte détecté)";
+    tEl.classList.add("on");
+  };
+
+  audio.play();
+  recognition.start();
+  audio.onended = () => setTimeout(()=>recognition.stop(), 500);
+}
+
+// Wire up transcribe buttons (delegated)
+document.addEventListener("click", e => {
+  const btn = e.target.closest(".transcribe-btn");
+  if(!btn) return;
+  const row = btn.closest(".brow");
+  const ph  = row?.querySelector(".audio-placeholder, .bubble-audio");
+  const src  = row?.dataset?.audioSrc;
+  if(src) transcribeAudio(src, btn.dataset.key);
+  else showToast("Source audio introuvable 😕");
+});
 
 </script>
 </body>
