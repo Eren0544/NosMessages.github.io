@@ -792,6 +792,7 @@ const db   = getDatabase(fbApp);
 const gp   = new GoogleAuthProvider();
 
 /* ── State ── */
+const _appStartTs = Date.now();
 let me = null, currentChat = null;
 let chatUnsubs = [], contactsUnsub = null;
 let atBottom = true;
@@ -925,17 +926,40 @@ $("regBtn").onclick = async ()=>{
 
 /* Google */
 async function googleAuth(){
-  try{
-    const {user}=await signInWithPopup(auth,gp);
-    const snap=await get(ref(db,`users/${user.uid}`));
+  // Clear any previous error
+  setErr("loginErr",""); setErr("regErr","");
+  try {
+    gp.setCustomParameters({prompt:"select_account"});
+    const result = await signInWithPopup(auth, gp);
+    const user = result.user;
+    const snap = await get(ref(db,`users/${user.uid}`));
     if(!snap.exists()){
-      // Use Google display name as default, clean it for tag
-      const googleName=user.displayName||"";
-      const name=googleName||"Utilisateur";
-      const tag=(googleName||"user").toLowerCase().replace(/[^a-z0-9]/g,"").slice(0,14)+Math.floor(Math.random()*99);
-      await saveProfile(user,name,"🌸",tag);
+      const googleName = user.displayName||"";
+      const name = googleName||"Utilisateur";
+      const tag  = (googleName||"user").toLowerCase().replace(/[^a-z0-9]/g,"").slice(0,14)+Math.floor(Math.random()*99);
+      await saveProfile(user, name, "🌸", tag);
     }
-  } catch(e){ if(e.code!=="auth/popup-closed-by-user") showToast("Erreur Google 😕"); }
+  } catch(e) {
+    console.error("Google auth error:", e.code, e.message);
+    const msgs = {
+      "auth/popup-closed-by-user": "",
+      "auth/cancelled-popup-request": "",
+      "auth/popup-blocked": "Popup bloquée — autorise les popups pour ce site dans ton navigateur",
+      "auth/unauthorized-domain": "Domaine non autorisé — ajoute ce domaine dans Firebase Console → Authentication → Domaines",
+      "auth/operation-not-allowed": "Connexion Google non activée — active-la dans Firebase Console → Authentication",
+      "auth/network-request-failed": "Problème réseau — vérifie ta connexion",
+    };
+    const msg = msgs[e.code];
+    if(msg === undefined) {
+      // Unknown error — show it
+      const active = $("registerScreen").classList.contains("off") ? "loginErr" : "regErr";
+      setErr(active, "Erreur Google : "+e.code);
+    } else if(msg) {
+      const active = $("registerScreen").classList.contains("off") ? "loginErr" : "regErr";
+      setErr(active, msg);
+    }
+    // Empty string = user just closed popup, ignore silently
+  }
 }
 $("gLoginBtn").onclick=$("gRegBtn").onclick=googleAuth;
 
@@ -1176,17 +1200,37 @@ function startContactsListener(){
   contactsUnsub=onValue(ref(db,`contacts/${me.uid}`),async snap=>{
     contactsData={};
     if(!snap.exists()){renderContacts();return;}
-    // Only show accepted contacts (status === "accepted")
-    const accepted = Object.entries(snap.val()).filter(([,v])=>v.status==="accepted");
+    // Show contacts: status accepted OR no status field (legacy contacts)
+    const accepted = Object.entries(snap.val()).filter(([,v])=>!v.status||v.status==="accepted");
     await Promise.all(accepted.map(async ([uid])=>{
       const s=await get(ref(db,`users/${uid}`)); if(s.exists()) contactsData[uid]=s.val();
     }));
     renderContacts();
     checkBirthdays();
   });
-  // Listen to friend requests
-  onValue(ref(db,`friendRequests/${me.uid}/received`), snap => renderReceived(snap));
-  onValue(ref(db,`friendRequests/${me.uid}/sent`),     snap => renderSent(snap));
+  // Listen to friend requests — notify only for NEW ones
+  let _knownReqs = new Set();
+  onValue(ref(db,`friendRequests/${me.uid}/received`), snap => {
+    renderReceived(snap);
+    if(!snap.exists()) return;
+    Object.keys(snap.val()).forEach(uid => {
+      if(!_knownReqs.has(uid)) {
+        _knownReqs.add(uid);
+        // Only notify if not the first load (avoid notif on app open)
+        if(_knownReqs.size > 1 || Date.now() - _appStartTs > 5000) {
+          if(!dndMode && Notification.permission === "granted") {
+            try { new Notification("💌 NosMessages", {body:`Nouvelle demande de contact !`}); } catch(_){}
+          }
+          showToast("🔔 Nouvelle demande de contact !");
+          $("tabRequests").click();
+        }
+      }
+    });
+    // Remove deleted ones from known set
+    const current = snap.exists() ? new Set(Object.keys(snap.val())) : new Set();
+    _knownReqs.forEach(uid => { if(!current.has(uid)) _knownReqs.delete(uid); });
+  });
+  onValue(ref(db,`friendRequests/${me.uid}/sent`), snap => renderSent(snap));
 }
 
 function renderContacts(filter=""){
@@ -1305,13 +1349,18 @@ function updateReqBadge(n){
 }
 
 async function acceptRequest(uid, u){
-  // Mark both as accepted contacts
   await Promise.all([
     set(ref(db,`contacts/${me.uid}/${uid}`),{status:"accepted",since:serverTimestamp()}),
     set(ref(db,`contacts/${uid}/${me.uid}`),{status:"accepted",since:serverTimestamp()}),
     remove(ref(db,`friendRequests/${me.uid}/received/${uid}`)),
     remove(ref(db,`friendRequests/${uid}/sent/${me.uid}`)),
   ]);
+  // Add to local contactsData immediately so UI updates without waiting Firebase
+  if(!contactsData[uid]) {
+    const s = await get(ref(db,`users/${uid}`));
+    if(s.exists()) contactsData[uid] = s.val();
+  }
+  renderContacts();
   showToast(`${u.name} accepté(e) ! 💕`);
   switchTab("contacts");
 }
